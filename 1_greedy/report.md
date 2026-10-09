@@ -4,7 +4,7 @@
 
 ### Mukhammad Sattorov 159351
 
-### Code link: https://github.com/hnowakowski?tab=repositories
+### Code link: https://github.com/hnowakowski/Evolutionary-Computation-2026/blob/main/1_greedy/main.cpp
 
 ## Description of the problem
 
