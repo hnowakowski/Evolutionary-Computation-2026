@@ -33,9 +33,9 @@ while solution size < desired length:
 return solution
 ```
 
-Max objective: 273658
-Average objective: 255106
-Min objective: 234696
+Max objective: 273658<br>
+Average objective: 255106<br>
+Min objective: 234696<br>
 Best solution out of 200 runs:
 
 ```
@@ -63,9 +63,9 @@ while solution size < desired length:
 return solution
 ```
 
-Max objective: 90075
-Average objective: 87476
-Min objective: 84362
+Max objective: 90075<br>
+Average objective: 87476<br>
+Min objective: 84362<br>
 Best solution out of 200 runs:
 
 ```
@@ -95,9 +95,9 @@ while solution size < desired length:
 return solution
 ```
 
-Max objective: 76623
-Average objective: 74707
-Min objective: 73176
+Max objective: 76623<br>
+Average objective: 74707<br>
+Min objective: 73176<br>
 Best solution out of 200 runs:
 
 ```
@@ -126,9 +126,9 @@ while solution size < desired length:
 return solution
 ```
 
-Max objective: 75281
-Average objective: 73743
-Min objective: 72590
+Max objective: 75281<br>
+Average objective: 73743<br>
+Min objective: 72590<br>
 Best solution out of 200 runs:
 
 ```
