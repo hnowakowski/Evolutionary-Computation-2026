@@ -10,6 +10,7 @@
 #include <ctime>
 #include <chrono>
 #include <numeric>
+#include <algorithm>
 
 struct Node {
 	int32_t x;
