@@ -140,7 +140,7 @@ std::vector<int32_t> greedyCycle(std::vector<std::vector<int32_t>> matrix, int32
 
 int main()
 {
-	std::vector<Node> nodes = getNodes(1);
+	std::vector<Node> nodes = getNodes(2);
 	std::vector<std::vector<int32_t>> distMatrix = getDistMatrix(nodes);
 	std::vector<std::vector<int32_t>> objMatrix = getObjMatrix(nodes);
 
