@@ -34,8 +34,7 @@ std::vector<Node> getNodes(int32_t tspChoice) {
 	return res;
 }
 
-// objective function is literally cost + distance, and since cost is assigned to nodes and not individual connections, 
-// i might as well just add the corresponding cost to the distance matrix so the algo is operating directly on objective function values
+// DON'T USE
 std::vector<std::vector<int32_t>> getObjMatrix(std::vector<Node> nodes) {
 	std::vector<std::vector<int32_t>> res(nodes.size());
 	for (int32_t i = 0; i < nodes.size(); i++) {
@@ -48,7 +47,6 @@ std::vector<std::vector<int32_t>> getObjMatrix(std::vector<Node> nodes) {
 	return res;
 }
 
-// keeping this for stat purposes and in case i need it in the future
 std::vector<std::vector<int32_t>> getDistMatrix(std::vector<Node> nodes) {
 	std::vector<std::vector<int32_t>> res(nodes.size());
 	for (int32_t i = 0; i < nodes.size(); i++) {
