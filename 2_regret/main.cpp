@@ -15,11 +15,12 @@ std::vector<int32_t> nearestNeighbour2(std::vector<std::vector<int32_t>>& matrix
 	res.push_back(startingNode);
 	std::vector<bool> contains(matrix.size());
 	contains[startingNode] = true;
+	std::vector<std::vector<int32_t>> insertionCosts(matrix.size(), std::vector<int32_t>(resSize));
 	for (int32_t i = 1; i < resSize; i++) {
 		int32_t minDist = INT32_MAX;
 		int32_t currCandidateSlot = -1;
 		int32_t currCandidateChoice = -1;
-		std::vector<std::vector<int32_t>> insertionCosts(matrix.size(), std::vector<int32_t>(res.size()+1));
+		for (auto v : insertionCosts) v.clear();
 		for (int32_t j = 0; j < res.size() + 1; j++) { // slot
 			for (int32_t k = 0; k < matrix.size(); k++) { //choice on each slot
 				if (contains[k]) continue;
@@ -93,26 +94,23 @@ std::vector<int32_t> nearestNeighbour2(std::vector<std::vector<int32_t>>& matrix
 }
 
 // O(n^3)
-std::vector<int32_t> greedyCycle2(std::vector<std::vector<int32_t>> matrix, std::vector<Node> nodes, int32_t startingNode) {
+std::vector<int32_t> greedyCycle2(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode) {
 	int32_t resSize = (int32_t)std::ceil(matrix.size() / 2.0);
 	std::vector<int32_t> res;
 	res.push_back(startingNode);
 	std::vector<bool> contains(matrix.size());
 	contains[startingNode] = true;
+	std::vector<std::vector<int32_t>> insertionCosts(matrix.size(), std::vector<int32_t>(resSize));
 	for (int32_t i = 1; i < resSize; i++) {
 		int32_t minDist = INT32_MAX;
 		int32_t currCandidateSlot = -1; //where to insert
 		int32_t currCandidateChoice = -1; //who to put in the insert
-		int32_t currRunnerUpSlot = -1;
-		int32_t currRunnerUpChoice = -1;
-		std::vector<std::vector<int32_t>> insertionCosts(matrix.size());
+		for (auto v : insertionCosts) v.clear();
 		for (int32_t j = 0; j < res.size() + 1; j++) {
 			for (int32_t k = 0; k < matrix.size(); k++) {
 				if (contains[k]) continue;
 				if (j == 0) {
 					if ((-matrix[res[res.size() - 1]][res[j]] + matrix[res[res.size() - 1]][k] + matrix[k][res[j]] + nodes[k].cost) < minDist) {
-						currRunnerUpSlot = currCandidateSlot;
-						currRunnerUpChoice = currCandidateChoice;
 						currCandidateSlot = j;
 						currCandidateChoice = k;
 						minDist = -matrix[res[res.size() - 1]][res[j]] + matrix[res[res.size() - 1]][k] + matrix[k][res[j]] + nodes[k].cost;
@@ -121,8 +119,6 @@ std::vector<int32_t> greedyCycle2(std::vector<std::vector<int32_t>> matrix, std:
 				}
 				else if (j == res.size()) {
 					if ((-matrix[res[res.size() - 1]][res[0]] + matrix[res[res.size() - 1]][k] + matrix[k][res[0]] + nodes[k].cost) < minDist) {
-						currRunnerUpSlot = currCandidateSlot;
-						currRunnerUpChoice = currCandidateChoice;
 						currCandidateSlot = j;
 						currCandidateChoice = k;
 						minDist = -matrix[res[res.size() - 1]][res[0]] + matrix[res[res.size() - 1]][k] + matrix[k][res[0]] + nodes[k].cost;
@@ -131,8 +127,6 @@ std::vector<int32_t> greedyCycle2(std::vector<std::vector<int32_t>> matrix, std:
 				}
 				else {
 					if ((-matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost) < minDist) {
-						currRunnerUpSlot = currCandidateSlot;
-						currRunnerUpChoice = currCandidateChoice;
 						currCandidateSlot = j;
 						currCandidateChoice = k;
 						minDist = -matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost;
@@ -141,14 +135,40 @@ std::vector<int32_t> greedyCycle2(std::vector<std::vector<int32_t>> matrix, std:
 				}
 			}
 		}
-		// regret
-		std::vector<int32_t> bestCosts = insertionCosts[currCandidateChoice];
-		std::vector<int32_t> runnerUpCosts = insertionCosts[currRunnerUpChoice];
-		std::sort(bestCosts.begin(), bestCosts.end());
-		std::sort(runnerUpCosts.begin(), runnerUpCosts.end());
-		if ((bestCosts[1] - bestCosts[0]) > runnerUpCosts[1] - runnerUpCosts[0]) {
-			res.insert(res.begin() + currRunnerUpSlot, currRunnerUpChoice);
-			contains[currRunnerUpChoice] = true;
+		if (res.size() == 1) { // only one slot available so there's no regret to be had
+			res.insert(res.begin() + currCandidateSlot, currCandidateChoice);
+			contains[currCandidateChoice] = true;
+			continue;
+		}
+		// finding 2nd best value for the chosen node
+		int32_t no1BestCurrCost = insertionCosts[currCandidateChoice][currCandidateSlot];
+		int32_t no2BestCurrCost = INT32_MAX;
+		for (int32_t j = 0; j < insertionCosts[currCandidateChoice].size(); j++) {
+			if (j == currCandidateSlot) continue;
+			no2BestCurrCost = std::min(no2BestCurrCost, insertionCosts[currCandidateChoice][j]);
+		}
+
+		// finding the 2nd best candidate for the chosen slot
+		int32_t runnerUpIdx = -1;
+		int32_t no1BestRunnerUpCost = INT32_MAX;
+		for (int32_t j = 0; j < insertionCosts.size(); j++) {
+			if (j == currCandidateChoice || contains[j]) continue;
+			if (insertionCosts[j][currCandidateSlot] < no1BestRunnerUpCost) {
+				no1BestRunnerUpCost = insertionCosts[j][currCandidateSlot];
+				runnerUpIdx = j;
+			}
+		}
+
+		// runner up's 2nd best value
+		int32_t no2BestRunnerUpCost = INT32_MAX;
+		for (int32_t j = 0; j < insertionCosts[runnerUpIdx].size(); j++) {
+			if (j == currCandidateSlot) continue;
+			no2BestRunnerUpCost = std::min(no2BestRunnerUpCost, insertionCosts[runnerUpIdx][j]);
+		}
+
+		if ((no2BestCurrCost - no1BestCurrCost) > (no2BestRunnerUpCost - no1BestRunnerUpCost)) {
+			res.insert(res.begin() + currCandidateSlot, runnerUpIdx);
+			contains[runnerUpIdx] = true;
 		}
 		else {
 			res.insert(res.begin() + currCandidateSlot, currCandidateChoice);
@@ -160,26 +180,24 @@ std::vector<int32_t> greedyCycle2(std::vector<std::vector<int32_t>> matrix, std:
 
 // both are the same as above, except the final regret comparison is different
 // O(n^3)
-std::vector<int32_t> nearestNeighbour2weighted(std::vector<std::vector<int32_t>> matrix, std::vector<Node> nodes, int32_t startingNode, float alpha = 0.5) {
+std::vector<int32_t> nearestNeighbour2weighted(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode) {
+	float alpha = 0.5;
 	int32_t resSize = (int32_t)std::ceil(matrix.size() / 2.0);
 	std::vector<int32_t> res;
 	res.push_back(startingNode);
 	std::vector<bool> contains(matrix.size());
 	contains[startingNode] = true;
+	std::vector<std::vector<int32_t>> insertionCosts(matrix.size(), std::vector<int32_t>(resSize));
 	for (int32_t i = 1; i < resSize; i++) {
 		int32_t minDist = INT32_MAX;
 		int32_t currCandidateSlot = -1;
 		int32_t currCandidateChoice = -1;
-		int32_t currRunnerUpSlot = -1;
-		int32_t currRunnerUpChoice = -1;
-		std::vector<std::vector<int32_t>> insertionCosts(matrix.size());
+		for (auto v : insertionCosts) v.clear();
 		for (int32_t j = 0; j < res.size() + 1; j++) { // slot
 			for (int32_t k = 0; k < matrix.size(); k++) { //choice on each slot
 				if (contains[k]) continue;
 				if (j == 0) {
 					if (matrix[k][res[j]] + nodes[k].cost < minDist) {
-						currRunnerUpSlot = currCandidateSlot;
-						currRunnerUpChoice = currCandidateChoice;
 						currCandidateSlot = j;
 						currCandidateChoice = k;
 						minDist = matrix[k][res[j]] + nodes[k].cost;
@@ -188,8 +206,6 @@ std::vector<int32_t> nearestNeighbour2weighted(std::vector<std::vector<int32_t>>
 				}
 				else if (j == res.size()) {
 					if (matrix[res[j - 1]][k] + nodes[k].cost < minDist) {
-						currRunnerUpSlot = currCandidateSlot;
-						currRunnerUpChoice = currCandidateChoice;
 						currCandidateSlot = j;
 						currCandidateChoice = k;
 						minDist = matrix[res[j - 1]][k] + nodes[k].cost;
@@ -198,8 +214,6 @@ std::vector<int32_t> nearestNeighbour2weighted(std::vector<std::vector<int32_t>>
 				}
 				else {
 					if ((-matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost) < minDist) {
-						currRunnerUpSlot = currCandidateSlot;
-						currRunnerUpChoice = currCandidateChoice;
 						currCandidateSlot = j;
 						currCandidateChoice = k;
 						minDist = -matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost;
@@ -208,19 +222,39 @@ std::vector<int32_t> nearestNeighbour2weighted(std::vector<std::vector<int32_t>>
 				}
 			}
 		}
-		if (res.size() == 1) {
+		if (res.size() == 1) { // only one slot available so there's no regret to be had
 			res.insert(res.begin() + currCandidateSlot, currCandidateChoice);
 			contains[currCandidateChoice] = true;
 			continue;
 		}
-		// the regret part
-		std::vector<int32_t> bestCosts = insertionCosts[currCandidateChoice];
-		std::vector<int32_t> runnerUpCosts = insertionCosts[currRunnerUpChoice];
-		std::sort(bestCosts.begin(), bestCosts.end());
-		std::sort(runnerUpCosts.begin(), runnerUpCosts.end());
-		if (((bestCosts[1] - bestCosts[0]) * (1.0 - alpha)) + ((bestCosts[0]) * alpha) > ((runnerUpCosts[1] - runnerUpCosts[0]) * (1.0 - alpha)) + ((runnerUpCosts[0]) * alpha)) {
-			res.insert(res.begin() + currRunnerUpSlot, currRunnerUpChoice);
-			contains[currRunnerUpChoice] = true;
+		// finding 2nd best value for the chosen node
+		int32_t no1BestCurrCost = insertionCosts[currCandidateChoice][currCandidateSlot];
+		int32_t no2BestCurrCost = INT32_MAX;
+		for (int32_t j = 0; j < insertionCosts[currCandidateChoice].size(); j++) {
+			if (j == currCandidateSlot) continue;
+			no2BestCurrCost = std::min(no2BestCurrCost, insertionCosts[currCandidateChoice][j]);
+		}
+
+		// finding the 2nd best candidate for the chosen slot
+		int32_t runnerUpIdx = -1;
+		int32_t no1BestRunnerUpCost = INT32_MAX;
+		for (int32_t j = 0; j < insertionCosts.size(); j++) {
+			if (j == currCandidateChoice || contains[j]) continue;
+			if (insertionCosts[j][currCandidateSlot] < no1BestRunnerUpCost) {
+				no1BestRunnerUpCost = insertionCosts[j][currCandidateSlot];
+				runnerUpIdx = j;
+			}
+		}
+
+		// runner up's 2nd best value
+		int32_t no2BestRunnerUpCost = INT32_MAX;
+		for (int32_t j = 0; j < insertionCosts[runnerUpIdx].size(); j++) {
+			if (j == currCandidateSlot) continue;
+			no2BestRunnerUpCost = std::min(no2BestRunnerUpCost, insertionCosts[runnerUpIdx][j]);
+		}
+		if (((no2BestCurrCost - no1BestCurrCost) * (1.0 - alpha)) + (no1BestCurrCost * alpha) > ((no2BestRunnerUpCost - no1BestRunnerUpCost) * (1.0 - alpha)) + (no1BestRunnerUpCost * alpha)) {
+			res.insert(res.begin() + currCandidateSlot, runnerUpIdx);
+			contains[runnerUpIdx] = true;
 		}
 		else {
 			res.insert(res.begin() + currCandidateSlot, currCandidateChoice);
@@ -231,26 +265,24 @@ std::vector<int32_t> nearestNeighbour2weighted(std::vector<std::vector<int32_t>>
 }
 
 // O(n^3)
-std::vector<int32_t> greedyCycle2weighted(std::vector<std::vector<int32_t>> matrix, std::vector<Node> nodes, int32_t startingNode, float alpha = 0.5) {
+std::vector<int32_t> greedyCycle2weighted(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode) {
+	float alpha = 0.5;
 	int32_t resSize = (int32_t)std::ceil(matrix.size() / 2.0);
 	std::vector<int32_t> res;
 	res.push_back(startingNode);
 	std::vector<bool> contains(matrix.size());
 	contains[startingNode] = true;
+	std::vector<std::vector<int32_t>> insertionCosts(matrix.size(), std::vector<int32_t>(resSize));
 	for (int32_t i = 1; i < resSize; i++) {
 		int32_t minDist = INT32_MAX;
 		int32_t currCandidateSlot = -1; //where to insert
 		int32_t currCandidateChoice = -1; //who to put in the insert
-		int32_t currRunnerUpSlot = -1;
-		int32_t currRunnerUpChoice = -1;
-		std::vector<std::vector<int32_t>> insertionCosts(matrix.size());
+		for (auto v : insertionCosts) v.clear();
 		for (int32_t j = 0; j < res.size() + 1; j++) {
 			for (int32_t k = 0; k < matrix.size(); k++) {
 				if (contains[k]) continue;
 				if (j == 0) {
 					if ((-matrix[res[res.size() - 1]][res[j]] + matrix[res[res.size() - 1]][k] + matrix[k][res[j]] + nodes[k].cost) < minDist) {
-						currRunnerUpSlot = currCandidateSlot;
-						currRunnerUpChoice = currCandidateChoice;
 						currCandidateSlot = j;
 						currCandidateChoice = k;
 						minDist = -matrix[res[res.size() - 1]][res[j]] + matrix[res[res.size() - 1]][k] + matrix[k][res[j]] + nodes[k].cost;
@@ -259,8 +291,6 @@ std::vector<int32_t> greedyCycle2weighted(std::vector<std::vector<int32_t>> matr
 				}
 				else if (j == res.size()) {
 					if ((-matrix[res[res.size() - 1]][res[0]] + matrix[res[res.size() - 1]][k] + matrix[k][res[0]] + nodes[k].cost) < minDist) {
-						currRunnerUpSlot = currCandidateSlot;
-						currRunnerUpChoice = currCandidateChoice;
 						currCandidateSlot = j;
 						currCandidateChoice = k;
 						minDist = -matrix[res[res.size() - 1]][res[0]] + matrix[res[res.size() - 1]][k] + matrix[k][res[0]] + nodes[k].cost;
@@ -269,8 +299,6 @@ std::vector<int32_t> greedyCycle2weighted(std::vector<std::vector<int32_t>> matr
 				}
 				else {
 					if ((-matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost) < minDist) {
-						currRunnerUpSlot = currCandidateSlot;
-						currRunnerUpChoice = currCandidateChoice;
 						currCandidateSlot = j;
 						currCandidateChoice = k;
 						minDist = -matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost;
@@ -279,14 +307,39 @@ std::vector<int32_t> greedyCycle2weighted(std::vector<std::vector<int32_t>> matr
 				}
 			}
 		}
-		// regret
-		std::vector<int32_t> bestCosts = insertionCosts[currCandidateChoice];
-		std::vector<int32_t> runnerUpCosts = insertionCosts[currRunnerUpChoice];
-		std::sort(bestCosts.begin(), bestCosts.end());
-		std::sort(runnerUpCosts.begin(), runnerUpCosts.end());
-		if (((bestCosts[1] - bestCosts[0]) * (1.0 - alpha)) + ((bestCosts[0]) * alpha) > ((runnerUpCosts[1] - runnerUpCosts[0]) * (1.0 - alpha)) + ((runnerUpCosts[0]) * alpha)) {
-			res.insert(res.begin() + currRunnerUpSlot, currRunnerUpChoice);
-			contains[currRunnerUpChoice] = true;
+		if (res.size() == 1) { // only one slot available so there's no regret to be had
+			res.insert(res.begin() + currCandidateSlot, currCandidateChoice);
+			contains[currCandidateChoice] = true;
+			continue;
+		}
+		// finding 2nd best value for the chosen node
+		int32_t no1BestCurrCost = insertionCosts[currCandidateChoice][currCandidateSlot];
+		int32_t no2BestCurrCost = INT32_MAX;
+		for (int32_t j = 0; j < insertionCosts[currCandidateChoice].size(); j++) {
+			if (j == currCandidateSlot) continue;
+			no2BestCurrCost = std::min(no2BestCurrCost, insertionCosts[currCandidateChoice][j]);
+		}
+
+		// finding the 2nd best candidate for the chosen slot
+		int32_t runnerUpIdx = -1;
+		int32_t no1BestRunnerUpCost = INT32_MAX;
+		for (int32_t j = 0; j < insertionCosts.size(); j++) {
+			if (j == currCandidateChoice || contains[j]) continue;
+			if (insertionCosts[j][currCandidateSlot] < no1BestRunnerUpCost) {
+				no1BestRunnerUpCost = insertionCosts[j][currCandidateSlot];
+				runnerUpIdx = j;
+			}
+		}
+
+		// runner up's 2nd best value
+		int32_t no2BestRunnerUpCost = INT32_MAX;
+		for (int32_t j = 0; j < insertionCosts[runnerUpIdx].size(); j++) {
+			if (j == currCandidateSlot) continue;
+			no2BestRunnerUpCost = std::min(no2BestRunnerUpCost, insertionCosts[runnerUpIdx][j]);
+		}
+		if (((no2BestCurrCost - no1BestCurrCost) * (1.0 - alpha)) + (no1BestCurrCost * alpha) > ((no2BestRunnerUpCost - no1BestRunnerUpCost) * (1.0 - alpha)) + (no1BestRunnerUpCost * alpha)) {
+			res.insert(res.begin() + currCandidateSlot, runnerUpIdx);
+			contains[runnerUpIdx] = true;
 		}
 		else {
 			res.insert(res.begin() + currCandidateSlot, currCandidateChoice);
@@ -300,16 +353,17 @@ int main()
 {
 	std::vector<Node> nodes = getNodes(1);
 	std::vector<std::vector<int32_t>> distMatrix = getDistMatrix(nodes);
-	auto start = std::chrono::steady_clock::now();
-	runTestCases(nearestNeighbour2, distMatrix, nodes, "nearestNeighbour2", "nearest2A", 2);
-	auto end = std::chrono::steady_clock::now();
-	std::chrono::duration<double> elapsed = end - start;
-	std::cout << "Elapsed: " << elapsed.count() << " seconds\n";
-	// 1 thread:  0.918902 seconds
-	// 2 threads: 0.475986 seconds
-	// 4 threads: 0.252528 seconds
-	// 8 threads: 0.186494 second
+	runTestCases(nearestNeighbour2, distMatrix, nodes, "nearestNeighbour2A", "nearestNeighbour2A", 4);
+	runTestCases(greedyCycle2, distMatrix, nodes, "greedyCycle2A", "greedyCycle2A", 4);
+	runTestCases(nearestNeighbour2weighted, distMatrix, nodes, "nearestNeighbour2weightedA", "nearestNeighbour2weightedA", 4);
+	runTestCases(greedyCycle2weighted, distMatrix, nodes, "greedyCycle2weightedA", "greedyCycle2weightedA", 4);
 
+	nodes = getNodes(2);
+	distMatrix = getDistMatrix(nodes);
+	runTestCases(nearestNeighbour2, distMatrix, nodes, "nearestNeighbour2B", "nearestNeighbour2B", 4);
+	runTestCases(greedyCycle2, distMatrix, nodes, "greedyCycle2B", "greedyCycle2B", 4);
+	runTestCases(nearestNeighbour2weighted, distMatrix, nodes, "nearestNeighbour2weightedB", "nearestNeighbour2weightedB", 4);
+	runTestCases(greedyCycle2weighted, distMatrix, nodes, "greedyCycle2weightedB", "greedyCycle2weightedB", 4);
 
 	std::cin.get();
 	return 0;

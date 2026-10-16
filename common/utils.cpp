@@ -78,12 +78,12 @@ int32_t totalCost(std::vector<int32_t> solution, std::vector<Node> nodes) {
 
 void saveSolution(std::vector<int32_t> solution, std::string filename) {
 	std::fstream fout;
-	fout.open("../../../" + filename, std::ios::out);
+	fout.open("../../../" + filename + ".txt", std::ios::out);
 	for each(auto var in solution){
 		fout << var <<" ";
 	}
 	fout.close();
-	std::cout << "\n../../../" + filename + " saved\n";
+	std::cout << "\n../../../" + filename + ".txt" + " saved\n";
 }
 
 void runTestCases(std::vector<int32_t>(*algo)(std::vector<std::vector<int32_t>>&, std::vector<Node>&, int32_t), std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes,
@@ -94,6 +94,7 @@ void runTestCases(std::vector<int32_t>(*algo)(std::vector<std::vector<int32_t>>&
 	std::atomic<int32_t> currIdx(0);
 	std::vector<std::thread> threads;
 
+	auto start = std::chrono::steady_clock::now();
 	for (int32_t i = 0; i < threadCount; i++) {
 		threads.emplace_back([&]() {
 			while (true) {
@@ -108,6 +109,8 @@ void runTestCases(std::vector<int32_t>(*algo)(std::vector<std::vector<int32_t>>&
 	for (size_t i = 0; i < threadCount; i++) {
 		threads[i].join();
 	}
+	auto end = std::chrono::steady_clock::now();
+	std::chrono::duration<double> elapsed = end - start;
 	size_t bestSolIdx = -1;
 	int32_t bestObj = INT32_MAX;
 	std::vector<int32_t> scores(200);
@@ -127,6 +130,7 @@ void runTestCases(std::vector<int32_t>(*algo)(std::vector<std::vector<int32_t>>&
 	std::cout << "\nMax objective: " << *std::max_element(scores.begin(), scores.end());
 	std::cout << "\nAverage objective: " << std::accumulate(scores.begin(), scores.end(), 0) / scores.size();
 	std::cout << "\nMin objective: " << bestObj;
+	std::cout << "\nElapsed: " << elapsed.count() << " seconds\n";
 	saveSolution(solutions[bestSolIdx], filename);
 	std::cout << "\n===============================================================\n";
 }
