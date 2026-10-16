@@ -85,3 +85,48 @@ void saveSolution(std::vector<int32_t> solution, std::string filename) {
 	fout.close();
 	std::cout << "\n../../../" + filename + " saved\n";
 }
+
+void runTestCases(std::vector<int32_t>(*algo)(std::vector<std::vector<int32_t>>&, std::vector<Node>&, int32_t), std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes,
+					std::string algoName, std::string filename, size_t threadCount) {
+
+	std::vector<std::vector<int32_t>> solutions(200);
+	std::cout << algoName <<"\n";
+	std::atomic<int32_t> currIdx(0);
+	std::vector<std::thread> threads;
+
+	for (int32_t i = 0; i < threadCount; i++) {
+		threads.emplace_back([&]() {
+			while (true) {
+				int32_t curr = currIdx.fetch_add(1);
+				if (curr % 20 == 0) std::cout << curr << "\n";
+				if (curr >= 200) break;
+				solutions[curr] = algo(matrix, nodes, curr);
+			}
+			});
+	}
+
+	for (size_t i = 0; i < threadCount; i++) {
+		threads[i].join();
+	}
+	size_t bestSolIdx = -1;
+	int32_t bestObj = INT32_MAX;
+	std::vector<int32_t> scores(200);
+
+	for (size_t i = 0; i < 200; i++) {
+		scores[i] = totalCost(solutions[i], nodes) + totalDist(solutions[i], matrix);
+		if (bestObj > scores[i]) {
+			bestSolIdx = i;
+			bestObj = scores[i];
+		}
+	}
+
+
+	for (int32_t var : solutions[bestSolIdx]) {
+		std::cout << var << " ";
+	}
+	std::cout << "\nMax objective: " << *std::max_element(scores.begin(), scores.end());
+	std::cout << "\nAverage objective: " << std::accumulate(scores.begin(), scores.end(), 0) / scores.size();
+	std::cout << "\nMin objective: " << bestObj;
+	saveSolution(solutions[bestSolIdx], filename);
+	std::cout << "\n===============================================================\n";
+}

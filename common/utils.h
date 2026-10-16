@@ -11,6 +11,8 @@
 #include <chrono>
 #include <numeric>
 #include <algorithm>
+#include <thread>
+#include <atomic>
 
 struct Node {
 	int32_t x;
@@ -35,3 +37,6 @@ int32_t totalDist(std::vector<int32_t> solution, std::vector<std::vector<int32_t
 int32_t totalCost(std::vector<int32_t> solution, std::vector<Node> nodes);
 
 void saveSolution(std::vector<int32_t> solution, std::string filename);
+
+void runTestCases(std::vector<int32_t>(*algo)(std::vector<std::vector<int32_t>>&, std::vector<Node>&, int32_t), std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes,
+					std::string algoName, std::string filename, size_t threadCount = 4);
