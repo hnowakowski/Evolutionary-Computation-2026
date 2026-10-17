@@ -20,7 +20,7 @@ std::vector<int32_t> nearestNeighbour2(std::vector<std::vector<int32_t>>& matrix
 		int32_t minDist = INT32_MAX;
 		int32_t currCandidateSlot = -1;
 		int32_t currCandidateChoice = -1;
-		for (auto v : insertionCosts) v.clear();
+		for (std::vector<int32_t>& v : insertionCosts) v.clear();
 		for (int32_t j = 0; j < res.size() + 1; j++) { // slot
 			for (int32_t k = 0; k < matrix.size(); k++) { //choice on each slot
 				if (contains[k]) continue;
@@ -81,7 +81,7 @@ std::vector<int32_t> nearestNeighbour2(std::vector<std::vector<int32_t>>& matrix
 			no2BestRunnerUpCost = std::min(no2BestRunnerUpCost, insertionCosts[runnerUpIdx][j]);
 		}
 
-		if ((no2BestCurrCost - no1BestCurrCost) > (no2BestRunnerUpCost - no1BestRunnerUpCost)) {
+		if ((no2BestCurrCost - no1BestCurrCost) < (no2BestRunnerUpCost - no1BestRunnerUpCost)) {
 			res.insert(res.begin() + currCandidateSlot, runnerUpIdx);
 			contains[runnerUpIdx] = true;
 		}
@@ -105,7 +105,7 @@ std::vector<int32_t> greedyCycle2(std::vector<std::vector<int32_t>>& matrix, std
 		int32_t minDist = INT32_MAX;
 		int32_t currCandidateSlot = -1; //where to insert
 		int32_t currCandidateChoice = -1; //who to put in the insert
-		for (auto v : insertionCosts) v.clear();
+		for (std::vector<int32_t>& v : insertionCosts) v.clear();
 		for (int32_t j = 0; j < res.size() + 1; j++) {
 			for (int32_t k = 0; k < matrix.size(); k++) {
 				if (contains[k]) continue;
@@ -166,7 +166,7 @@ std::vector<int32_t> greedyCycle2(std::vector<std::vector<int32_t>>& matrix, std
 			no2BestRunnerUpCost = std::min(no2BestRunnerUpCost, insertionCosts[runnerUpIdx][j]);
 		}
 
-		if ((no2BestCurrCost - no1BestCurrCost) > (no2BestRunnerUpCost - no1BestRunnerUpCost)) {
+		if ((no2BestCurrCost - no1BestCurrCost) < (no2BestRunnerUpCost - no1BestRunnerUpCost)) {
 			res.insert(res.begin() + currCandidateSlot, runnerUpIdx);
 			contains[runnerUpIdx] = true;
 		}
@@ -192,7 +192,7 @@ std::vector<int32_t> nearestNeighbour2weighted(std::vector<std::vector<int32_t>>
 		int32_t minDist = INT32_MAX;
 		int32_t currCandidateSlot = -1;
 		int32_t currCandidateChoice = -1;
-		for (auto v : insertionCosts) v.clear();
+		for (std::vector<int32_t>& v : insertionCosts) v.clear();
 		for (int32_t j = 0; j < res.size() + 1; j++) { // slot
 			for (int32_t k = 0; k < matrix.size(); k++) { //choice on each slot
 				if (contains[k]) continue;
@@ -252,7 +252,7 @@ std::vector<int32_t> nearestNeighbour2weighted(std::vector<std::vector<int32_t>>
 			if (j == currCandidateSlot) continue;
 			no2BestRunnerUpCost = std::min(no2BestRunnerUpCost, insertionCosts[runnerUpIdx][j]);
 		}
-		if (((no2BestCurrCost - no1BestCurrCost) * (1.0 - alpha)) + (no1BestCurrCost * alpha) > ((no2BestRunnerUpCost - no1BestRunnerUpCost) * (1.0 - alpha)) + (no1BestRunnerUpCost * alpha)) {
+		if (((no2BestCurrCost - no1BestCurrCost) * (1.0 - alpha)) + -(no1BestCurrCost * alpha) < ((no2BestRunnerUpCost - no1BestRunnerUpCost) * (1.0 - alpha)) + -(no1BestRunnerUpCost * alpha)) {
 			res.insert(res.begin() + currCandidateSlot, runnerUpIdx);
 			contains[runnerUpIdx] = true;
 		}
@@ -277,7 +277,7 @@ std::vector<int32_t> greedyCycle2weighted(std::vector<std::vector<int32_t>>& mat
 		int32_t minDist = INT32_MAX;
 		int32_t currCandidateSlot = -1; //where to insert
 		int32_t currCandidateChoice = -1; //who to put in the insert
-		for (auto v : insertionCosts) v.clear();
+		for (std::vector<int32_t>& v : insertionCosts) v.clear();
 		for (int32_t j = 0; j < res.size() + 1; j++) {
 			for (int32_t k = 0; k < matrix.size(); k++) {
 				if (contains[k]) continue;
@@ -337,7 +337,7 @@ std::vector<int32_t> greedyCycle2weighted(std::vector<std::vector<int32_t>>& mat
 			if (j == currCandidateSlot) continue;
 			no2BestRunnerUpCost = std::min(no2BestRunnerUpCost, insertionCosts[runnerUpIdx][j]);
 		}
-		if (((no2BestCurrCost - no1BestCurrCost) * (1.0 - alpha)) + (no1BestCurrCost * alpha) > ((no2BestRunnerUpCost - no1BestRunnerUpCost) * (1.0 - alpha)) + (no1BestRunnerUpCost * alpha)) {
+		if (((no2BestCurrCost - no1BestCurrCost) * (1.0 - alpha)) + -(no1BestCurrCost * alpha) < ((no2BestRunnerUpCost - no1BestRunnerUpCost) * (1.0 - alpha)) + -(no1BestRunnerUpCost * alpha)) {
 			res.insert(res.begin() + currCandidateSlot, runnerUpIdx);
 			contains[runnerUpIdx] = true;
 		}

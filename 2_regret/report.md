@@ -20,141 +20,267 @@ All solutions are described as a vector of subsequent node indices, their object
 
 ### Nearest neighbour 2-regret
 
-On each iteration, we pick the two nearest nodes from all the possible insertion points. Then, we add the one where the difference between the best and the second best option is smallest. At the end we create a direct connection from the end node to the start.
+On each iteration, we pick the nearest node from all the possible insertion points. Then, we find the second best node for that spot, and pick one where each node's difference between its best and second best insertion option is larger. At the end we create a direct connection from the end node to the start.
 
 Time complexity: O(n^3)
 
 ```
-put first node into solution
-create vector with a list of all used nodes
+add first node into solution
+create vector contains
 add first node to used nodes list
+create vector of vectors insertionCosts
 while solution size < desired length:
-    create vector of insertion costs for each node
+    clear insertionCosts
     for j from 0 to solution length + 1:
         for k from 0 to matrix length:
-            if index k is true in the used vector, continue
+            if contains[k] == true, continue
             else if j == 0:
-                if matrix[k][solution[j]] < smallest objective so far:
-                 set as current choice
+                if matrix[k][solution[j]] + nodes[k].cost < smallest objective so far:
+                    set as current choice
+                insertionCosts[k][j] = matrix[k][solution[j]] + nodes[k].cost
+            else if j == solution length:
+                if matrix[solution[j-1]][k] + nodes[k].cost < smallest objective so far:
+                    set as current choice
+                insertionCosts[k][j] = matrix[solution[j-1]][k] + nodes[k].cost
+            else
+                if -matrix[res[j-1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost < smallest objective so far:
+                    set as current choice
+                insertionCosts[k][j] = -matrix[res[j-1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost
 
-            else if j == solution length and matrix[solution[j-1]][k] < smallest objective so far, set as current choice
-            else if -matrix[solution[j-1]][solution[j]] + matrix[solution[j-1]][k] + matrix[k][solution[j]] < smallest objective so far, set as current choice
-    insert best node at best position
-    add node to the pool
+    if solution.length == 1:
+        insert best node at best position
+        contains[best node idx] = true
+        continue
+
+    no1BestCurr = best node
+    no2BestCurr = 2nd best slot best node can be inserted in
+    no1BestRunnerUp = 2nd best node candidate for the best slot
+    no2BestRunnerUp = 2nd best slot the 2nd best node candidate can be inserted in
+
+    if (no2BestCurr.cost - no1BestCurr.cost) < (no2BestRunnerUp.cost - no1BestRunnerUp.cost):
+        add 2nd best node into solution
+        contains[2nd best node idx] = true
+    else:
+        add best node into solution
+        contains[best node idx] = true
+
 return solution
 ```
 
 TSPA:<br>
-Max objective: 79954<br>
-Average objective: 76092<br>
-Min objective: 73415<br>
+Max objective: 77022<br>
+Average objective: 74306<br>
+Min objective: 72328<br>
 
 TSPB:<br>
-Max objective: 67963<br>
-Average objective: 61692<br>
-Min objective: 55523<br>
+Max objective: 66164<br>
+Average objective: 59476<br>
+Min objective: 52915<br>
 
-![](./nearestend.png)
+![](./results/nearestNeighbour2A.png)
+![](./results/nearestNeighbour2B.png)
 
 ### Greedy cycle 2-regret
 
-On each iteration, we pick the nearest (lowest objective function increase) node from all possible node insertion points. At the end we create a direct connection from the end node to the start.
+On each iteration, we pick the nearest node from all the possible insertion points, while treating insertion costs as if the solution was already a closed cycle. Then, we find the second best node for that spot, and pick one where each node's difference between its best and second best insertion option is larger.
 
 Time complexity: O(n^3)
 
 ```
-put first node into solution
-create vector with a pool of available nodes (all aside from the initial node)
+add first node into solution
+create vector contains
+add first node to used nodes list
+create vector of vectors insertionCosts
 while solution size < desired length:
-    for each j from 0 to solution length + 1:
-        for each k node that exists:
-            if the node k is not in the pool, continue
-            else if j == 0 and matrix[k][solution[j]] < smallest objective so far, set as current choice
-            else if j == solution length and matrix[solution[j-1]][k] < smallest objective so far, set as current choice
-            else if -matrix[solution[j-1]][solution[j]] + matrix[solution[j-1]][k] + matrix[k][solution[j]] < smallest objective so far, set as current choice
-    insert best node at best position
-    add node to the pool
+    clear insertionCosts
+    for j from 0 to solution length + 1:
+        for k from 0 to matrix length:
+            if contains[k] == true, continue
+            else if j == 0:
+                if -matrix[res[res.size() - 1]][res[j]] + matrix[res[res.size() - 1]][k] + matrix[k][res[j]] + nodes[k].cost < smallest objective so far:
+                    set as current choice
+                insertionCosts[k][j] = -matrix[res[res.size() - 1]][res[j]] + matrix[res[res.size() - 1]][k] + matrix[k][res[j]] + nodes[k].cost
+            else if j == solution length:
+                if -matrix[res[res.size() - 1]][res[0]] + matrix[res[res.size() - 1]][k] + matrix[k][res[0]] + nodes[k].cost < smallest objective so far:
+                    set as current choice
+                insertionCosts[k][j] = -matrix[res[res.size() - 1]][res[0]] + matrix[res[res.size() - 1]][k] + matrix[k][res[0]] + nodes[k].cost
+            else
+                if -matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost < smallest objective so far:
+                    set as current choice
+                insertionCosts[k][j] = -matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost
+
+    if solution.length == 1:
+        insert best node at best position
+        contains[best node idx] = true
+        continue
+
+    no1BestCurr = best node
+    no2BestCurr = 2nd best slot best node can be inserted in
+    no1BestRunnerUp = 2nd best node candidate for the best slot
+    no2BestRunnerUp = 2nd best slot the 2nd best node candidate can be inserted in
+
+    if (no2BestCurr.cost - no1BestCurr.cost) < (no2BestRunnerUp.cost - no1BestRunnerUp.cost):
+        add 2nd best node into solution
+        contains[2nd best node idx] = true
+    else:
+        add best node into solution
+        contains[best node idx] = true
+
 return solution
 ```
 
 TSPA:<br>
-Max objective: 78761<br>
-Average objective: 75726<br>
-Min objective: 73566<br>
+Max objective: 75585<br>
+Average objective: 73817<br>
+Min objective: 72886<br>
 
 TSPB:<br>
-Max objective: 67407<br>
-Average objective: 61667<br>
-Min objective: 55417<br>
+Max objective: 63641<br>
+Average objective: 59371<br>
+Min objective: 53245<br>
 
-![](./nearestall.png)
+![](./results/greedyCycle2A.png)
+![](./results/greedyCycle2B.png)
 
 ### Nearest neighbour 2-regret weighted
 
-On each iteration, expand our current cycle by adding the nearest node from any possible node insertion points. Very similar to previous approach, except we constantly treat the vector as a cycle so at the end we don't need to add a connection to the beginning.
+On each iteration, we pick the nearest node from all the possible insertion points. Then, we find the second best node for that spot, pick the one for which 0.5 \* regret + 0.5 cost. At the end we create a direct connection from the end node to the start.
 
 Time complexity: O(n^3)
 
 ```
-put first node into solution
-create vector with a pool of available nodes (all aside from the initial node)
+alpha = 0.5
+add first node into solution
+create vector contains
+add first node to used nodes list
+create vector of vectors insertionCosts
 while solution size < desired length:
-    for each j from 0 to solution length + 1:
-        for each k node that exists:
-            if the node k is not in the pool, continue
-            if j == 0 and -matrix[solution[solution size - 1]][solution[j]] + matrix[solution[solution size - 1]][k] + matrix[k][solution[j]] < smallest objective so far, set as current choice
-            else if -matrix[solution[j-1]][solution[j]] + matrix[solution[j-1]][k] + matrix[k][solution[j]] < smallest objective so far, set as current choice
-    insert best node at best position
-    add node to the pool
+    clear insertionCosts
+    for j from 0 to solution length + 1:
+        for k from 0 to matrix length:
+            if contains[k] == true, continue
+            else if j == 0:
+                if matrix[k][solution[j]] + nodes[k].cost < smallest objective so far:
+                    set as current choice
+                insertionCosts[k][j] = matrix[k][solution[j]] + nodes[k].cost
+            else if j == solution length:
+                if matrix[solution[j-1]][k] + nodes[k].cost < smallest objective so far:
+                    set as current choice
+                insertionCosts[k][j] = matrix[solution[j-1]][k] + nodes[k].cost
+            else
+                if -matrix[res[j-1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost < smallest objective so far:
+                    set as current choice
+                insertionCosts[k][j] = -matrix[res[j-1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost
+
+    if solution.length == 1:
+        insert best node at best position
+        contains[best node idx] = true
+        continue
+
+    no1BestCurr = best node
+    no2BestCurr = 2nd best slot best node can be inserted in
+    no1BestRunnerUp = 2nd best node candidate for the best slot
+    no2BestRunnerUp = 2nd best slot the 2nd best node candidate can be inserted in
+
+    if ((no2BestCurrCost - no1BestCurrCost) * (1.0 - alpha)) + -(no1BestCurrCost * alpha) < ((no2BestRunnerUpCost - no1BestRunnerUpCost) * (1.0 - alpha)) + -(no1BestRunnerUpCost * alpha):
+        add 2nd best node into solution
+        contains[2nd best node idx] = true
+    else:
+        add best node into solution
+        contains[best node idx] = true
+
 return solution
 ```
 
 TSPA:<br>
-Max objective: 77573<br>
-Average objective: 75154<br>
-Min objective: 72913<br>
+Max objective: 77755<br>
+Average objective: 74513<br>
+Min objective: 72505<br>
 
 TSPB:<br>
-Max objective: 68359<br>
-Average objective: 60725<br>
-Min objective: 54978<br>
+Max objective: 61579<br>
+Average objective: 57535<br>
+Min objective: 52646<br>
 
-![](./greedycycle.png)
+![](./results/nearestNeighbour2weightedA.png)
+![](./results/nearestNeighbour2weightedB.png)
 
 ### Greedy cycle 2-regret weighted
 
-On each iteration, expand our current cycle by adding the nearest node from any possible node insertion points. Very similar to previous approach, except we constantly treat the vector as a cycle so at the end we don't need to add a connection to the beginning.
+On each iteration, we pick the nearest node from all the possible insertion points, while treating insertion costs as if the solution was already a closed cycle. Then, we find the second best node for that spot, pick the one for which 0.5 \* regret + 0.5 cost.
 
 Time complexity: O(n^3)
 
 ```
-put first node into solution
-create vector with a pool of available nodes (all aside from the initial node)
+alpha = 0.5
+add first node into solution
+create vector contains
+add first node to used nodes list
+create vector of vectors insertionCosts
 while solution size < desired length:
-    for each j from 0 to solution length + 1:
-        for each k node that exists:
-            if the node k is not in the pool, continue
-            if j == 0 and -matrix[solution[solution size - 1]][solution[j]] + matrix[solution[solution size - 1]][k] + matrix[k][solution[j]] < smallest objective so far, set as current choice
-            else if -matrix[solution[j-1]][solution[j]] + matrix[solution[j-1]][k] + matrix[k][solution[j]] < smallest objective so far, set as current choice
-    insert best node at best position
-    add node to the pool
+    clear insertionCosts
+    for j from 0 to solution length + 1:
+        for k from 0 to matrix length:
+            if contains[k] == true, continue
+            else if j == 0:
+                if -matrix[res[res.size() - 1]][res[j]] + matrix[res[res.size() - 1]][k] + matrix[k][res[j]] + nodes[k].cost < smallest objective so far:
+                    set as current choice
+                insertionCosts[k][j] = -matrix[res[res.size() - 1]][res[j]] + matrix[res[res.size() - 1]][k] + matrix[k][res[j]] + nodes[k].cost
+            else if j == solution length:
+                if -matrix[res[res.size() - 1]][res[0]] + matrix[res[res.size() - 1]][k] + matrix[k][res[0]] + nodes[k].cost < smallest objective so far:
+                    set as current choice
+                insertionCosts[k][j] = -matrix[res[res.size() - 1]][res[0]] + matrix[res[res.size() - 1]][k] + matrix[k][res[0]] + nodes[k].cost
+            else
+                if -matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost < smallest objective so far:
+                    set as current choice
+                insertionCosts[k][j] = -matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost
+
+    if solution.length == 1:
+        insert best node at best position
+        contains[best node idx] = true
+        continue
+
+    no1BestCurr = best node
+    no2BestCurr = 2nd best slot best node can be inserted in
+    no1BestRunnerUp = 2nd best node candidate for the best slot
+    no2BestRunnerUp = 2nd best slot the 2nd best node candidate can be inserted in
+
+   if ((no2BestCurrCost - no1BestCurrCost) * (1.0 - alpha)) + -(no1BestCurrCost * alpha) < ((no2BestRunnerUpCost - no1BestRunnerUpCost) * (1.0 - alpha)) + -(no1BestRunnerUpCost * alpha):
+        add 2nd best node into solution
+        contains[2nd best node idx] = true
+    else:
+        add best node into solution
+        contains[best node idx] = true
+
 return solution
 ```
 
 TSPA:<br>
-Max objective: 76264<br>
-Average objective: 74584<br>
-Min objective: 72863<br>
+Max objective: 75132<br>
+Average objective: 73396<br>
+Min objective: 72430<br>
 
 TSPB:<br>
-Max objective: 67335<br>
-Average objective: 60143<br>
-Min objective: 54231<br>
+Max objective: 63770<br>
+Average objective: 58195<br>
+Min objective: 52834<br>
 
-Best solution out of 200 runs:
+![](./results/greedyCycle2weightedA.png)
+![](./results/greedyCycle2weightedB.png)
 
-![](./greedycycle.png)
+## All scores so far
+
+| Algorithm                           |  TSPA max | TSPA average |  TSPA min |  TSPB max | TSPB average |  TSPB min |
+| ----------------------------------- | --------: | -----------: | --------: | --------: | -----------: | --------: |
+| Random                              |    273658 |       255106 |    234696 |    221369 |       213252 |    196792 |
+| Nearest neighbour end only          |     90075 |        87476 |     84362 |     63166 |        59397 |     56007 |
+| Nearest neighbour all possibilities |     76623 |        74707 |     73176 |     67192 |        60635 |     56001 |
+| Greedy cycle                        |     75281 |        73743 |     72590 |     63734 |        59650 |     55655 |
+| Nearest neighbour 2-regret          |     77022 |        74306 | **72328** |     66164 |        59476 |     52915 |
+| Greedy cycle 2-regret               |     75585 |        73817 |     72886 |     63641 |        59371 |     53245 |
+| Nearest neighbour 2-regret weighted |     77755 |        74513 |     72505 | **61579** |    **57535** | **52646** |
+| Greedy cycle 2-regret weighted      | **75132** |    **73396** |     72430 |     63770 |        58195 |     52834 |
 
 ## Conclusions
 
-While the random approach is well...random, greedy approaches present a tradeoff dynamic. If we consider only the nearest neighbour of the last node, we have to do much less computation, but will miss out on more optimal solutions that the all possibilities variant explores. While the processing time is MUCH longer, it does yield substantially better scores on our test dataset. And, as a further refinement, we can also take care of the issue with a horrendously unoptimal final edge by treating the solution as a loop throughout the algorithm with the greedy cycle method.
+Taking regret into account improves scores all across the board, albeit not dramatically, especially for TSPA. For both datasets, the nearest neighbour approach achieves the best score, with the 2-regret and 2-regret weighted variants for TSPA and TSPB respectively.
