@@ -86,9 +86,7 @@ void saveSolution(std::vector<int32_t> solution, std::string filename) {
 	std::cout << "\n../../../" + filename + ".txt" + " saved\n";
 }
 
-void runTestCases(std::vector<int32_t>(*algo)(std::vector<std::vector<int32_t>>&, std::vector<Node>&, int32_t), std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes,
-					std::string algoName, std::string filename, size_t threadCount) {
-
+void runTestCases(algo algo, std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, std::string algoName, std::string filename, size_t threadCount, subalgo subalgo) {
 	std::vector<std::vector<int32_t>> solutions(200);
 	std::cout << algoName <<"\n";
 	std::atomic<int32_t> currIdx(0);
@@ -101,7 +99,7 @@ void runTestCases(std::vector<int32_t>(*algo)(std::vector<std::vector<int32_t>>&
 				int32_t curr = currIdx.fetch_add(1);
 				if (curr % 20 == 0) std::cout << curr << "\n";
 				if (curr >= 200) break;
-				solutions[curr] = algo(matrix, nodes, curr);
+				solutions[curr] = algo(matrix, nodes, curr, subalgo);
 			}
 			});
 	}
@@ -111,7 +109,7 @@ void runTestCases(std::vector<int32_t>(*algo)(std::vector<std::vector<int32_t>>&
 	}
 	auto end = std::chrono::steady_clock::now();
 	std::chrono::duration<double> elapsed = end - start;
-	size_t bestSolIdx = -1;
+	size_t bestSolIdx = 0;
 	int32_t bestObj = INT32_MAX;
 	std::vector<int32_t> scores(200);
 
