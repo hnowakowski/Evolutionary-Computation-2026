@@ -1,4 +1,4 @@
-﻿#include "../common/utils.h"
+﻿#include "main.h"
 
 // slot with the absolute lowest value on any node
 // find some node that has the second lowest value on that slot
@@ -349,22 +349,22 @@ std::vector<int32_t> greedyCycle2weighted(std::vector<std::vector<int32_t>>& mat
 	return res;
 }
 
-int main()
-{
-	std::vector<Node> nodes = getNodes(1);
-	std::vector<std::vector<int32_t>> distMatrix = getDistMatrix(nodes);
-	runTestCases(nearestNeighbour2, distMatrix, nodes, "nearestNeighbour2A", "nearestNeighbour2A", 4);
-	runTestCases(greedyCycle2, distMatrix, nodes, "greedyCycle2A", "greedyCycle2A", 4);
-	runTestCases(nearestNeighbour2weighted, distMatrix, nodes, "nearestNeighbour2weightedA", "nearestNeighbour2weightedA", 4);
-	runTestCases(greedyCycle2weighted, distMatrix, nodes, "greedyCycle2weightedA", "greedyCycle2weightedA", 4);
-
-	nodes = getNodes(2);
-	distMatrix = getDistMatrix(nodes);
-	runTestCases(nearestNeighbour2, distMatrix, nodes, "nearestNeighbour2B", "nearestNeighbour2B", 4);
-	runTestCases(greedyCycle2, distMatrix, nodes, "greedyCycle2B", "greedyCycle2B", 4);
-	runTestCases(nearestNeighbour2weighted, distMatrix, nodes, "nearestNeighbour2weightedB", "nearestNeighbour2weightedB", 4);
-	runTestCases(greedyCycle2weighted, distMatrix, nodes, "greedyCycle2weightedB", "greedyCycle2weightedB", 4);
-
-	std::cin.get();
-	return 0;
-}
+//int main()
+//{
+//	std::vector<Node> nodes = getNodes(1);
+//	std::vector<std::vector<int32_t>> distMatrix = getDistMatrix(nodes);
+//	runTestCases(nearestNeighbour2, distMatrix, nodes, "nearestNeighbour2A", "nearestNeighbour2A", 4);
+//	runTestCases(greedyCycle2, distMatrix, nodes, "greedyCycle2A", "greedyCycle2A", 4);
+//	runTestCases(nearestNeighbour2weighted, distMatrix, nodes, "nearestNeighbour2weightedA", "nearestNeighbour2weightedA", 4);
+//	runTestCases(greedyCycle2weighted, distMatrix, nodes, "greedyCycle2weightedA", "greedyCycle2weightedA", 4);
+//
+//	nodes = getNodes(2);
+//	distMatrix = getDistMatrix(nodes);
+//	runTestCases(nearestNeighbour2, distMatrix, nodes, "nearestNeighbour2B", "nearestNeighbour2B", 4);
+//	runTestCases(greedyCycle2, distMatrix, nodes, "greedyCycle2B", "greedyCycle2B", 4);
+//	runTestCases(nearestNeighbour2weighted, distMatrix, nodes, "nearestNeighbour2weightedB", "nearestNeighbour2weightedB", 4);
+//	runTestCases(greedyCycle2weighted, distMatrix, nodes, "greedyCycle2weightedB", "greedyCycle2weightedB", 4);
+//
+//	std::cin.get();
+//	return 0;
+//}

@@ -15,4 +15,4 @@ endif()
 
 project(3_local)
 
-add_executable(3_local "main.cpp" "../common/utils.h" "../common/utils.cpp")
+add_executable(3_local "main.cpp" "../common/utils.h" "../common/utils.cpp" "../1_greedy/main.cpp" "../2_regret/main.cpp")

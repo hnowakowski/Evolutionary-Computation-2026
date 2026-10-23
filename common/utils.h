@@ -13,6 +13,9 @@
 #include <algorithm>
 #include <thread>
 #include <atomic>
+#include <set>
+#include <array>
+#include <random>
 
 struct Node {
 	int32_t x;

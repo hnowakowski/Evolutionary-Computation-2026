@@ -1,255 +1,192 @@
 ﻿#include "../common/utils.h"
+#include "../1_greedy/main.h"
+#include "../2_regret/main.h"
+/*
+ random from lab 1
+ O(n)
+std::vector<int32_t> randomSolution(std::vector<std::vector<int32_t>> matrix, int32_t startingNode)
 
-// random from lab 1
-// O(n)
-std::vector<int32_t> randomSolution(std::vector<std::vector<int32_t>> matrix, int32_t startingNode) {
-	int32_t resSize = (int32_t)std::ceil(matrix.size() / 2.0);
-	std::vector<int32_t> res(resSize);
-	res[0] = startingNode;
-	std::vector<int32_t> remainingPool;
-	for (int32_t i = 0; i < resSize; i++) {
-		if (i == startingNode) continue;
-		remainingPool.push_back(i);
-	}
-	std::srand(0);
-	for (int32_t i = 1; i < resSize; i++) {
-		int32_t randomIdx = rand() % remainingPool.size();
-		res[i] = remainingPool[randomIdx];
-		remainingPool.erase(remainingPool.begin() + randomIdx);
-	}
-	return res;
+ 2-regret nearest neighbour from lab2
+ O(n^3)
+std::vector<int32_t> nearestNeighbour2(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode)
+
+ weighted greedy cycle with 2-regret from lab 2
+ O(n^3)
+std::vector<int32_t> greedyCycle2weighted(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode)
+*/
+
+
+// refer to slide 114 of the presentation
+int32_t edgeSwapDelta(std::vector<std::vector<int32_t>>& matrix, std::vector<int32_t>& sol, size_t i, size_t j, size_t k, size_t l) {
+	int32_t delta = 0;
+	// i -> j, k -> l turns into i -> k, j -> l
+	delta -= matrix[i][j];
+	delta -= matrix[k][l];
+	delta += matrix[i][k];
+	delta += matrix[j][l];
+	return delta;
 }
 
-// 2-regret nearest neighbour from lab2
-// O(n^3)
-std::vector<int32_t> nearestNeighbour2(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode) {
-	int32_t resSize = (int32_t)std::ceil(matrix.size() / 2.0);
-	std::vector<int32_t> res;
-	res.push_back(startingNode);
-	std::vector<bool> contains(matrix.size());
-	contains[startingNode] = true;
-	std::vector<std::vector<int32_t>> insertionCosts(matrix.size(), std::vector<int32_t>(resSize));
-	for (int32_t i = 1; i < resSize; i++) {
-		int32_t minDist = INT32_MAX;
-		int32_t currCandidateSlot = -1;
-		int32_t currCandidateChoice = -1;
-		for (std::vector<int32_t>& v : insertionCosts) v.clear();
-		for (int32_t j = 0; j < res.size() + 1; j++) { // slot
-			for (int32_t k = 0; k < matrix.size(); k++) { //choice on each slot
-				if (contains[k]) continue;
-				if (j == 0) {
-					if (matrix[k][res[j]] + nodes[k].cost < minDist) {
-						currCandidateSlot = j;
-						currCandidateChoice = k;
-						minDist = matrix[k][res[j]] + nodes[k].cost;
-					}
-					insertionCosts[k][j] = matrix[k][res[j]] + nodes[k].cost;
-				}
-				else if (j == res.size()) {
-					if (matrix[res[j - 1]][k] + nodes[k].cost < minDist) {
-						currCandidateSlot = j;
-						currCandidateChoice = k;
-						minDist = matrix[res[j - 1]][k] + nodes[k].cost;
-					}
-					insertionCosts[k][j] = matrix[res[j - 1]][k] + nodes[k].cost;
-				}
-				else {
-					if ((-matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost) < minDist) {
-						currCandidateSlot = j;
-						currCandidateChoice = k;
-						minDist = -matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost;
-					}
-					insertionCosts[k][j] = -matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost;
-				}
-			}
-		}
-		if (res.size() == 1) { // only one slot available so there's no regret to be had
-			res.insert(res.begin() + currCandidateSlot, currCandidateChoice);
-			contains[currCandidateChoice] = true;
-			continue;
-		}
-		// finding 2nd best value for the chosen node
-		int32_t no1BestCurrCost = insertionCosts[currCandidateChoice][currCandidateSlot];
-		int32_t no2BestCurrCost = INT32_MAX;
-		for (int32_t j = 0; j < insertionCosts[currCandidateChoice].size(); j++) {
-			if (j == currCandidateSlot) continue;
-			no2BestCurrCost = std::min(no2BestCurrCost, insertionCosts[currCandidateChoice][j]);
-		}
+int32_t intraNodeSwapDelta(std::vector<std::vector<int32_t>>& matrix, std::vector<int32_t>& sol, size_t _i, size_t _j) {
+	// converting global matrix idx into sol's idx
+	int32_t i = std::find(sol.begin(), sol.end(), _i) - sol.begin(); //horrible
+	int32_t j = std::find(sol.begin(), sol.end(), _j) - sol.begin(); //atrocious
 
-		// finding the 2nd best candidate for the chosen slot
-		int32_t runnerUpIdx = -1;
-		int32_t no1BestRunnerUpCost = INT32_MAX;
-		for (int32_t j = 0; j < insertionCosts.size(); j++) {
-			if (j == currCandidateChoice || contains[j]) continue;
-			if (insertionCosts[j][currCandidateSlot] < no1BestRunnerUpCost) {
-				no1BestRunnerUpCost = insertionCosts[j][currCandidateSlot];
-				runnerUpIdx = j;
-			}
-		}
+	// too many weird edge cases so i'm calculating the indices this way instead of explicit formulas in a thousand elseif blocks
+	int32_t beforeI = (i == 0) ? sol.size() - 1 : i - 1;
+	int32_t afterI = (i == sol.size() - 1) ? 0 : i + 1;
+	int32_t beforeJ = (j == 0) ? sol.size() - 1 : j - 1;
+	int32_t afterJ = (j == sol.size() - 1) ? 0 : j + 1;
+	int32_t delta = 0;
+	int32_t x = sol[i];
+	int32_t y = sol[j];
 
-		// runner up's 2nd best value
-		int32_t no2BestRunnerUpCost = INT32_MAX;
-		for (int32_t j = 0; j < insertionCosts[runnerUpIdx].size(); j++) {
-			if (j == currCandidateSlot) continue;
-			no2BestRunnerUpCost = std::min(no2BestRunnerUpCost, insertionCosts[runnerUpIdx][j]);
-		}
-
-		if ((no2BestCurrCost - no1BestCurrCost) < (no2BestRunnerUpCost - no1BestRunnerUpCost)) {
-			res.insert(res.begin() + currCandidateSlot, runnerUpIdx);
-			contains[runnerUpIdx] = true;
-		}
-		else {
-			res.insert(res.begin() + currCandidateSlot, currCandidateChoice);
-			contains[currCandidateChoice] = true;
-		}
-	}
-	return res;
+	delta -= matrix[sol[beforeI]][x];
+	delta -= matrix[x][sol[afterI]];
+	delta -= matrix[sol[beforeJ]][y];
+	delta -= matrix[y][sol[afterJ]];
+	delta += matrix[sol[beforeI]][y];
+	delta += matrix[y][sol[afterI]];
+	delta += matrix[sol[beforeJ]][x];
+	delta += matrix[x][sol[afterJ]];
+	return delta;
 }
 
+int32_t interNodeSwapDelta(std::vector<std::vector<int32_t>>& matrix, std::vector<int32_t>& sol, std::vector<Node>& nodes, int32_t _i, int32_t j) {
+	int32_t delta = 0;
+	delta -= nodes[_i].cost;
+	delta += nodes[j].cost;
 
-// weighted greedy cycle with 2-regret from lab 2
-// O(n^3)
-std::vector<int32_t> greedyCycle2weighted(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode) {
-	float alpha = 0.5;
-	int32_t resSize = (int32_t)std::ceil(matrix.size() / 2.0);
-	std::vector<int32_t> res;
-	res.push_back(startingNode);
-	std::vector<bool> contains(matrix.size());
-	contains[startingNode] = true;
-	std::vector<std::vector<int32_t>> insertionCosts(matrix.size(), std::vector<int32_t>(resSize));
-	for (int32_t i = 1; i < resSize; i++) {
-		int32_t minDist = INT32_MAX;
-		int32_t currCandidateSlot = -1; //where to insert
-		int32_t currCandidateChoice = -1; //who to put in the insert
-		for (std::vector<int32_t>& v : insertionCosts) v.clear();
-		for (int32_t j = 0; j < res.size() + 1; j++) {
-			for (int32_t k = 0; k < matrix.size(); k++) {
-				if (contains[k]) continue;
-				if (j == 0) {
-					if ((-matrix[res[res.size() - 1]][res[j]] + matrix[res[res.size() - 1]][k] + matrix[k][res[j]] + nodes[k].cost) < minDist) {
-						currCandidateSlot = j;
-						currCandidateChoice = k;
-						minDist = -matrix[res[res.size() - 1]][res[j]] + matrix[res[res.size() - 1]][k] + matrix[k][res[j]] + nodes[k].cost;
-					}
-					insertionCosts[k].push_back(-matrix[res[res.size() - 1]][res[j]] + matrix[res[res.size() - 1]][k] + matrix[k][res[j]] + nodes[k].cost);
-				}
-				else if (j == res.size()) {
-					if ((-matrix[res[res.size() - 1]][res[0]] + matrix[res[res.size() - 1]][k] + matrix[k][res[0]] + nodes[k].cost) < minDist) {
-						currCandidateSlot = j;
-						currCandidateChoice = k;
-						minDist = -matrix[res[res.size() - 1]][res[0]] + matrix[res[res.size() - 1]][k] + matrix[k][res[0]] + nodes[k].cost;
-					}
-					insertionCosts[k].push_back(-matrix[res[res.size() - 1]][res[0]] + matrix[res[res.size() - 1]][k] + matrix[k][res[0]] + nodes[k].cost);
-				}
-				else {
-					if ((-matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost) < minDist) {
-						currCandidateSlot = j;
-						currCandidateChoice = k;
-						minDist = -matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost;
-					}
-					insertionCosts[k].push_back(-matrix[res[j - 1]][res[j]] + matrix[res[j - 1]][k] + matrix[k][res[j]] + nodes[k].cost);
-				}
-			}
-		}
-		if (res.size() == 1) { // only one slot available so there's no regret to be had
-			res.insert(res.begin() + currCandidateSlot, currCandidateChoice);
-			contains[currCandidateChoice] = true;
-			continue;
-		}
-		// finding 2nd best value for the chosen node
-		int32_t no1BestCurrCost = insertionCosts[currCandidateChoice][currCandidateSlot];
-		int32_t no2BestCurrCost = INT32_MAX;
-		for (int32_t j = 0; j < insertionCosts[currCandidateChoice].size(); j++) {
-			if (j == currCandidateSlot) continue;
-			no2BestCurrCost = std::min(no2BestCurrCost, insertionCosts[currCandidateChoice][j]);
-		}
+	// converting global matrix idx into sol's idx
+	int32_t i = std::find(sol.begin(), sol.end(), _i) - sol.begin(); //deplorable
 
-		// finding the 2nd best candidate for the chosen slot
-		int32_t runnerUpIdx = -1;
-		int32_t no1BestRunnerUpCost = INT32_MAX;
-		for (int32_t j = 0; j < insertionCosts.size(); j++) {
-			if (j == currCandidateChoice || contains[j]) continue;
-			if (insertionCosts[j][currCandidateSlot] < no1BestRunnerUpCost) {
-				no1BestRunnerUpCost = insertionCosts[j][currCandidateSlot];
-				runnerUpIdx = j;
-			}
-		}
-
-		// runner up's 2nd best value
-		int32_t no2BestRunnerUpCost = INT32_MAX;
-		for (int32_t j = 0; j < insertionCosts[runnerUpIdx].size(); j++) {
-			if (j == currCandidateSlot) continue;
-			no2BestRunnerUpCost = std::min(no2BestRunnerUpCost, insertionCosts[runnerUpIdx][j]);
-		}
-		if (((no2BestCurrCost - no1BestCurrCost) * (1.0 - alpha)) + -(no1BestCurrCost * alpha) < ((no2BestRunnerUpCost - no1BestRunnerUpCost) * (1.0 - alpha)) + -(no1BestRunnerUpCost * alpha)) {
-			res.insert(res.begin() + currCandidateSlot, runnerUpIdx);
-			contains[runnerUpIdx] = true;
-		}
-		else {
-			res.insert(res.begin() + currCandidateSlot, currCandidateChoice);
-			contains[currCandidateChoice] = true;
-		}
-	}
-	return res;
+	// too many weird edge cases so i'm calculating the indices this way instead of explicit formulas in a thousand elseif blocks
+	int32_t beforeI = (i == 0) ? sol.size() - 1 : i - 1;
+	int32_t afterI = (i == sol.size() - 1) ? 0 : i + 1;
+	int32_t x = sol[i];
+	delta -= matrix[sol[beforeI]][x];
+	delta -= matrix[x][sol[afterI]];
+	delta += matrix[sol[beforeI]][j];
+	delta += matrix[j][sol[afterI]];
+	return delta;
 }
 
 std::vector<int32_t> localGreedyEdges(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode, subalgo subalgo) {
+	std::mt19937 rng(startingNode);
+	std::uniform_int_distribution<size_t> binaryDist(0, 1);
 	std::vector<int32_t> sol = subalgo(matrix, nodes, startingNode);
-	int32_t currScore = totalCost(sol, nodes) + totalDist(sol, matrix);
-	while (true) {
+
+	// setting up pools for random moves
+	std::array<bool, 200> contains = {false};
+	//std::vector<std::array<size_t, 2>> nodeSwapPoolIntra;
+	for (size_t i = 0; i < sol.size() - 1; i++) {
+		contains[sol[i]] = true;
+		//for (size_t j = i + 1; j < sol.size(); j++) {
+		//	nodeSwapPoolIntra.emplace_back(sol[i], sol[j]);
+		//}
+	}
+	contains[sol[sol.size() - 1]] = true;
+
+	std::vector<std::array<size_t, 2>> nodeSwapPoolInter;
+	for (size_t i = 0; i < matrix.size(); i++) {
+		if (!contains[i]) continue;
+		for (size_t j = 0; j < matrix.size(); j++) {
+			if (contains[j]) continue;
+			nodeSwapPoolInter.emplace_back(std::array<size_t, 2>{ i, j });
+		}
+	}
+	std::vector<std::array<size_t, 4>> edgeSwapPool;
+	for (size_t i = 0; i < sol.size(); i++) {
+		size_t j = (i == sol.size() - 1) ? 0 : i + 1;
+		for (size_t k = i + 2; k < sol.size(); k++) {
+			size_t l = (k == sol.size() - 1) ? 0 : k + 1;
+			// edge case where the edges are next to each other because of the loop
+			if (i == 0 && l == 0) continue;
+			edgeSwapPool.emplace_back(std::array<size_t, 4>{(size_t)sol[i], (size_t)sol[j], (size_t)sol[k], (size_t)sol[l]}); //debt of not using size_t everywhere from the start :(
+		}
+	}
+
+	// actual search
+	while (!nodeSwapPoolInter.empty() || !edgeSwapPool.empty()) {
 		bool improved = false;
-		for (size_t i = 0; i < sol.size() - 1; i++) {
-			for (size_t j = i + 1; j < sol.size(); j++) {
-				// w x y z -> w z y x
-				// -dist(w->x) - dist(x->y) + dist(w->z) + dist(z->y) - dist(y->z) -dist(z->w) + dist(y->x) + dist(x->w)
-				int32_t iDelta = INT32_MAX;
-				int32_t jDelta = INT32_MAX;
-				if (i == 0) {
-					iDelta = -matrix[sol[sol.size() - 1]][sol[i]] - matrix[sol[i]][sol[1]] + matrix[sol[sol.size() - 1]][sol[j]] + matrix[sol[j]][sol[1]];
-				}
-				else {
-					iDelta = -matrix[sol[i - 1]][sol[i]] - matrix[sol[i]][sol[i + 1]] + matrix[sol[j - 1]][sol[i]] + matrix[sol[i]][sol[j + 1]];
-				}
-				if (j == sol.size() - 1) {
-					jDelta = -matrix[sol[j - 1]][sol[j]] - matrix[sol[j]][sol[0]] + matrix[sol[j - 1]][sol[i]] + matrix[sol[i]][sol[0]];
-				}
-				else {
-					jDelta = -matrix[sol[j - 1]][sol[j]] - matrix[sol[j]][sol[j + 1]] + matrix[sol[j - 1]][sol[i]] + matrix[sol[i]][sol[j + 1]];
-				}
-				if (iDelta + jDelta > 0) {
-					currScore += iDelta + jDelta;
-					std::swap(sol.begin() + i, sol.begin() + j);
+		// inter
+		if (binaryDist(rng) && !nodeSwapPoolInter.empty()) {
+				std::uniform_int_distribution<size_t> dist(0, nodeSwapPoolInter.size()-1);
+				size_t idx = dist(rng);
+				auto [i, j] = nodeSwapPoolInter[idx];
+				nodeSwapPoolInter[idx] = nodeSwapPoolInter[nodeSwapPoolInter.size() - 1];
+				nodeSwapPoolInter.pop_back();
+				int32_t delta = interNodeSwapDelta(matrix, sol, nodes, i, j);
+				if (delta < 0) {
+					std::replace(sol.begin(), sol.end(), i, j);
+					contains[i] = false;
+					contains[j] = true;
 					improved = true;
-					break;
+				}
+		}
+		// intra
+		else {
+			if (!edgeSwapPool.empty()) {
+				std::uniform_int_distribution<size_t> dist(0, edgeSwapPool.size()-1);
+				size_t idx = dist(rng);
+				auto [i, j, k, l] = edgeSwapPool[idx];
+				edgeSwapPool[idx] = edgeSwapPool[edgeSwapPool.size() - 1];
+				edgeSwapPool.pop_back();
+				int32_t delta = edgeSwapDelta(matrix, sol, i, j, k, l);
+				size_t jIdx = std::find(sol.begin(), sol.end(), j) - sol.begin();
+				size_t kIdx = std::find(sol.begin(), sol.end(), k) - sol.begin();
+				if (delta < 0) {
+					std::reverse(sol.begin() + jIdx, sol.begin() + kIdx + 1);
+					improved = true;
 				}
 			}
-			if (improved) break;
 		}
-		if (!improved) break;
+		// if nodes changed reset the neighbourhood
+		if (improved) {
+			nodeSwapPoolInter.clear();
+			edgeSwapPool.clear();
+
+			for (size_t i = 0; i < matrix.size(); i++) {
+				if (!contains[i]) continue;
+				for (size_t j = 0; j < matrix.size(); j++) {
+					if (contains[j]) continue;
+					nodeSwapPoolInter.emplace_back(std::array<size_t, 2>{ i, j });
+				}
+			}
+			for (size_t i = 0; i < sol.size(); i++) {
+				size_t j = (i == sol.size() - 1) ? 0 : i + 1;
+				for (size_t k = i + 2; k < sol.size(); k++) {
+					size_t l = (k == sol.size() - 1) ? 0 : k + 1;
+					// edge case where the edges are next to each other because of the loop
+					if (i == 0 && l == 0) continue;
+					edgeSwapPool.emplace_back(std::array<size_t, 4>{(size_t)sol[i], (size_t)sol[j], (size_t)sol[k], (size_t)sol[l]});
+				}
+			}
+		}
 	}
 	return sol;
 }
 
-std::vector<int32_t> localGreedyNodes(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode, subalgo subalgo) {
-	std::vector<int32_t> startingSol = subalgo(matrix, nodes, startingNode);
-
-}
-
-std::vector<int32_t> localSteepestEdges(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode, subalgo subalgo) {
-
-}
-
-std::vector<int32_t> localSteepestNodes(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode, subalgo subalgo) {
-
-}
+//std::vector<int32_t> localGreedyNodes(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode, subalgo subalgo) {
+//	std::vector<int32_t> startingSol = subalgo(matrix, nodes, startingNode);
+//
+//}
+//
+//std::vector<int32_t> localSteepestEdges(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode, subalgo subalgo) {
+//
+//}
+//
+//std::vector<int32_t> localSteepestNodes(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode, subalgo subalgo) {
+//
+//}
 
 
 int main()
 {
 	std::vector<Node> nodes = getNodes(1);
 	std::vector<std::vector<int32_t>> distMatrix = getDistMatrix(nodes);
-	/*runTestCases(nearestNeighbour2, distMatrix, nodes, "nearestNeighbour2A", "nearestNeighbour2A", 4);
-	runTestCases(greedyCycle2, distMatrix, nodes, "greedyCycle2A", "greedyCycle2A", 4);
+	runTestCases(localGreedyEdges, distMatrix, nodes, "localGreedyEdgesA", "localGreedyEdgesA", 6, randomSolution);
+	/*runTestCases(greedyCycle2, distMatrix, nodes, "greedyCycle2A", "greedyCycle2A", 4);
 	runTestCases(nearestNeighbour2weighted, distMatrix, nodes, "nearestNeighbour2weightedA", "nearestNeighbour2weightedA", 4);
 	runTestCases(greedyCycle2weighted, distMatrix, nodes, "greedyCycle2weightedA", "greedyCycle2weightedA", 4);*/
 

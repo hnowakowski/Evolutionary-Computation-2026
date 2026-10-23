@@ -1,21 +1,22 @@
-﻿#include "../common/utils.h"
+﻿#include "main.h"
 
 // O(n)
-std::vector<int32_t> randomSolution(std::vector<std::vector<int32_t>> matrix, int32_t startingNode) {
+std::vector<int32_t> randomSolution(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode) {
 	int32_t resSize = (int32_t)std::ceil(matrix.size() / 2.0);
 	std::vector<int32_t> res(resSize);
 	res[0] = startingNode;
 	std::vector<int32_t> remainingPool;
 	for (int32_t i = 0; i < resSize; i++) {
 		if (i == startingNode) continue;
-		remainingPool.push_back(i);
+		remainingPool.emplace_back(i);
 	}
-	std::srand(0);
+	std::mt19937 rng(startingNode);
 	for (int32_t i = 1; i < resSize; i++) {
-		int32_t randomIdx = rand() % remainingPool.size();
-		//std::cout << i << " " << randomIdx << " " << remainingPool.size() << "\n";
+		std::uniform_int_distribution<int32_t> dist(0, remainingPool.size() - 1);
+		int32_t randomIdx = dist(rng);
 		res[i] = remainingPool[randomIdx];
-		remainingPool.erase(remainingPool.begin() + randomIdx);
+		remainingPool[randomIdx] = remainingPool[remainingPool.size() - 1];
+		remainingPool.pop_back();
 	}
 	return res;
 }
@@ -138,114 +139,114 @@ std::vector<int32_t> greedyCycle(std::vector<std::vector<int32_t>> matrix, int32
 }
 
 
-int main()
-{
-	std::vector<Node> nodes = getNodes(2);
-	std::vector<std::vector<int32_t>> distMatrix = getDistMatrix(nodes);
-	std::vector<std::vector<int32_t>> objMatrix = getObjMatrix(nodes);
-
-	std::cout << "RANDOM\n";
-	std::vector<int32_t> bestSol;
-	int32_t bestObj = INT32_MAX;
-	int32_t worstObj = -1;
-	std::vector<int32_t> scores;
-	for (int32_t i = 0; i < 200; i++) {
-		std::vector<int32_t> tempSol = randomSolution(objMatrix, i);
-		int32_t obj = totalDist(tempSol, distMatrix) + totalCost(tempSol, nodes);
-		if (obj < bestObj) {
-			bestObj = obj;
-			bestSol = tempSol;
-		}
-		else worstObj = std::max(obj, worstObj);
-		scores.push_back(obj);
-	}
-	for each(int32_t var in bestSol){
-		std::cout << var << " ";
-	}
-	std::cout << "\nMax objective: " << worstObj;
-	std::cout << "\nAverage objective: " << std::accumulate(scores.begin(), scores.end(), 0)/scores.size();
-	std::cout << "\nMin objective: " << totalDist(bestSol, distMatrix) + totalCost(bestSol, nodes);
-	saveSolution(bestSol, "random.txt");
-	std::cout << "\n===============================================================\n";
-
-
-	std::cout << "Nearest neighbour end only\n";
-	bestSol.clear();
-	bestObj = INT32_MAX;
-	worstObj = -1;
-	scores.clear();
-	for (int32_t i = 0; i < 200; i++) {
-		std::vector<int32_t> tempSol = nearestNeighbourEnd(objMatrix, i);
-		int32_t obj = totalDist(tempSol, distMatrix) + totalCost(tempSol, nodes);
-		if (obj < bestObj) {
-			bestObj = obj;
-			bestSol = tempSol;
-		}
-		else worstObj = std::max(obj, worstObj);
-		scores.push_back(obj);
-	}
-	for each(int32_t var in bestSol) {
-		std::cout << var << " ";
-	}
-	std::cout << "\nMax objective: " << worstObj;
-	std::cout << "\nAverage objective: " << std::accumulate(scores.begin(), scores.end(), 0) / scores.size();
-	std::cout << "\nMin objective: " << totalDist(bestSol, distMatrix) + totalCost(bestSol, nodes);
-	saveSolution(bestSol, "nearestend.txt");
-	std::cout << "\n===============================================================\n";
-
-
-	std::cout << "Nearest neighbour all possibilities\n";
-	bestSol.clear();
-	bestObj = INT32_MAX;
-	worstObj = -1;
-	scores.clear();
-	for (int32_t i = 0; i < 200; i++) {
-		if (i % 20 == 0) std::cout << i << "\n";
-		std::vector<int32_t> tempSol = nearestNeighbourAll(objMatrix, i);
-		int32_t obj = totalDist(tempSol, distMatrix) + totalCost(tempSol, nodes);
-		if (obj < bestObj) {
-			bestObj = obj;
-			bestSol = tempSol;
-		}
-		else worstObj = std::max(obj, worstObj);
-		scores.push_back(obj);
-	}
-	for each(int32_t var in bestSol) {
-		std::cout << var << " ";
-	}
-	std::cout << "\nMax objective: " << worstObj;
-	std::cout << "\nAverage objective: " << std::accumulate(scores.begin(), scores.end(), 0) / scores.size();
-	std::cout << "\nMin objective: " << totalDist(bestSol, distMatrix) + totalCost(bestSol, nodes);
-	saveSolution(bestSol, "nearestall.txt");
-	std::cout << "\n===============================================================\n";
-
-
-	std::cout << "Greedy cycle\n";
-	bestSol.clear();
-	bestObj = INT32_MAX;
-	worstObj = -1;
-	scores.clear();
-	for (int32_t i = 0; i < 200; i++) {
-		if (i % 20 == 0) std::cout << i << "\n";
-		std::vector<int32_t> tempSol = greedyCycle(objMatrix, i);
-		int32_t obj = totalDist(tempSol, distMatrix) + totalCost(tempSol, nodes);
-		if (obj < bestObj) {
-			bestObj = obj;
-			bestSol = tempSol;
-		}
-		else worstObj = std::max(obj, worstObj);
-		scores.push_back(obj);
-	}
-	for each(int32_t var in bestSol) {
-		std::cout << var << " ";
-	}
-	std::cout << "\nMax objective: " << worstObj;
-	std::cout << "\nAverage objective: " << std::accumulate(scores.begin(), scores.end(), 0) / scores.size();
-	std::cout << "\nMin objective: " << totalDist(bestSol, distMatrix) + totalCost(bestSol, nodes);
-	saveSolution(bestSol, "greedycycle.txt");
-	std::cout << "\n===============================================================\n";
-
-	char buff;
-	std::cin >> buff;
-	return 0;
-}
+//int main()
+//{
+//	std::vector<Node> nodes = getNodes(2);
+//	std::vector<std::vector<int32_t>> distMatrix = getDistMatrix(nodes);
+//	std::vector<std::vector<int32_t>> objMatrix = getObjMatrix(nodes);
+//
+//	std::cout << "RANDOM\n";
+//	std::vector<int32_t> bestSol;
+//	int32_t bestObj = INT32_MAX;
+//	int32_t worstObj = -1;
+//	std::vector<int32_t> scores;
+//	for (int32_t i = 0; i < 200; i++) {
+//		std::vector<int32_t> tempSol = randomSolution(objMatrix, i);
+//		int32_t obj = totalDist(tempSol, distMatrix) + totalCost(tempSol, nodes);
+//		if (obj < bestObj) {
+//			bestObj = obj;
+//			bestSol = tempSol;
+//		}
+//		else worstObj = std::max(obj, worstObj);
+//		scores.push_back(obj);
+//	}
+//	for each(int32_t var in bestSol){
+//		std::cout << var << " ";
+//	}
+//	std::cout << "\nMax objective: " << worstObj;
+//	std::cout << "\nAverage objective: " << std::accumulate(scores.begin(), scores.end(), 0)/scores.size();
+//	std::cout << "\nMin objective: " << totalDist(bestSol, distMatrix) + totalCost(bestSol, nodes);
+//	saveSolution(bestSol, "random.txt");
+//	std::cout << "\n===============================================================\n";
+//
+//
+//	std::cout << "Nearest neighbour end only\n";
+//	bestSol.clear();
+//	bestObj = INT32_MAX;
+//	worstObj = -1;
+//	scores.clear();
+//	for (int32_t i = 0; i < 200; i++) {
+//		std::vector<int32_t> tempSol = nearestNeighbourEnd(objMatrix, i);
+//		int32_t obj = totalDist(tempSol, distMatrix) + totalCost(tempSol, nodes);
+//		if (obj < bestObj) {
+//			bestObj = obj;
+//			bestSol = tempSol;
+//		}
+//		else worstObj = std::max(obj, worstObj);
+//		scores.push_back(obj);
+//	}
+//	for each(int32_t var in bestSol) {
+//		std::cout << var << " ";
+//	}
+//	std::cout << "\nMax objective: " << worstObj;
+//	std::cout << "\nAverage objective: " << std::accumulate(scores.begin(), scores.end(), 0) / scores.size();
+//	std::cout << "\nMin objective: " << totalDist(bestSol, distMatrix) + totalCost(bestSol, nodes);
+//	saveSolution(bestSol, "nearestend.txt");
+//	std::cout << "\n===============================================================\n";
+//
+//
+//	std::cout << "Nearest neighbour all possibilities\n";
+//	bestSol.clear();
+//	bestObj = INT32_MAX;
+//	worstObj = -1;
+//	scores.clear();
+//	for (int32_t i = 0; i < 200; i++) {
+//		if (i % 20 == 0) std::cout << i << "\n";
+//		std::vector<int32_t> tempSol = nearestNeighbourAll(objMatrix, i);
+//		int32_t obj = totalDist(tempSol, distMatrix) + totalCost(tempSol, nodes);
+//		if (obj < bestObj) {
+//			bestObj = obj;
+//			bestSol = tempSol;
+//		}
+//		else worstObj = std::max(obj, worstObj);
+//		scores.push_back(obj);
+//	}
+//	for each(int32_t var in bestSol) {
+//		std::cout << var << " ";
+//	}
+//	std::cout << "\nMax objective: " << worstObj;
+//	std::cout << "\nAverage objective: " << std::accumulate(scores.begin(), scores.end(), 0) / scores.size();
+//	std::cout << "\nMin objective: " << totalDist(bestSol, distMatrix) + totalCost(bestSol, nodes);
+//	saveSolution(bestSol, "nearestall.txt");
+//	std::cout << "\n===============================================================\n";
+//
+//
+//	std::cout << "Greedy cycle\n";
+//	bestSol.clear();
+//	bestObj = INT32_MAX;
+//	worstObj = -1;
+//	scores.clear();
+//	for (int32_t i = 0; i < 200; i++) {
+//		if (i % 20 == 0) std::cout << i << "\n";
+//		std::vector<int32_t> tempSol = greedyCycle(objMatrix, i);
+//		int32_t obj = totalDist(tempSol, distMatrix) + totalCost(tempSol, nodes);
+//		if (obj < bestObj) {
+//			bestObj = obj;
+//			bestSol = tempSol;
+//		}
+//		else worstObj = std::max(obj, worstObj);
+//		scores.push_back(obj);
+//	}
+//	for each(int32_t var in bestSol) {
+//		std::cout << var << " ";
+//	}
+//	std::cout << "\nMax objective: " << worstObj;
+//	std::cout << "\nAverage objective: " << std::accumulate(scores.begin(), scores.end(), 0) / scores.size();
+//	std::cout << "\nMin objective: " << totalDist(bestSol, distMatrix) + totalCost(bestSol, nodes);
+//	saveSolution(bestSol, "greedycycle.txt");
+//	std::cout << "\n===============================================================\n";
+//
+//	char buff;
+//	std::cin >> buff;
+//	return 0;
+//}
