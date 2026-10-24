@@ -78,12 +78,12 @@ int32_t totalCost(std::vector<int32_t> solution, std::vector<Node> nodes) {
 
 void saveSolution(std::vector<int32_t> solution, std::string filename) {
 	std::fstream fout;
-	fout.open("../../../" + filename + ".txt", std::ios::out);
+	fout.open("../../../results/" + filename + ".txt", std::ios::out);
 	for each(auto var in solution){
 		fout << var <<" ";
 	}
 	fout.close();
-	std::cout << "\n../../../" + filename + ".txt" + " saved\n";
+	std::cout << "\n../../../results/" + filename + ".txt" + " saved\n";
 }
 
 void runTestCases(algo algo, std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, std::string algoName, std::string filename, size_t threadCount, subalgo subalgo) {

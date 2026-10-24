@@ -1,8 +1,14 @@
 import csv
+from pathlib import Path
+
+import matplotlib
 import matplotlib.pyplot as plt
 
-CSV_FILE = "TSPA.csv"
-SOLUTION_FILE = "../1_greedy/greedycycle.txt"
+matplotlib.use("Agg")
+
+BASE_DIR = Path(__file__).resolve().parent
+CSV_FILE = BASE_DIR / "TSPA.csv"
+RESULTS_DIR = BASE_DIR.parent / "3_local" / "results"
 
 
 def load_nodes(filename):
@@ -28,7 +34,7 @@ def load_solution(filename):
         return list(map(int, file.read().split()))
 
 
-def visualize(nodes, solution):
+def visualize(nodes, solution, title, output_file):
     fig, ax = plt.subplots(figsize=(10, 8))
 
     xs = [node[0] for node in nodes]
@@ -78,29 +84,26 @@ def visualize(nodes, solution):
             zorder=1,
         )
 
-    # Label selected nodes with their original indices.
-    for i in solution:
-        x, y, cost = nodes[i]
-
-        ax.annotate(
-            str(i),
-            (x, y),
-            xytext=(5, 5),
-            textcoords="offset points",
-            fontsize=9,
-        )
-
-    ax.set_title(SOLUTION_FILE)
+    ax.set_title(title)
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_aspect("equal", adjustable="datalim")
     ax.grid(True, alpha=0.2)
     ax.legend()
     plt.tight_layout()
-    plt.show()
+    fig.savefig(output_file, dpi=150)
+    plt.close(fig)
 
 
 if __name__ == "__main__":
-    nodes = load_nodes(CSV_FILE)
-    solution = load_solution(SOLUTION_FILE)
-    visualize(nodes, solution)
+    for solution_file in sorted(RESULTS_DIR.glob("*.txt")):
+        csv_file = (
+            BASE_DIR / "TSPB.csv"
+            if solution_file.stem.endswith("B")
+            else CSV_FILE
+        )
+        nodes = load_nodes(csv_file)
+        solution = load_solution(solution_file)
+        output_file = solution_file.with_suffix(".png")
+        visualize(nodes, solution, solution_file.name, output_file)
+        print(f"Saved {output_file}")
