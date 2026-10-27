@@ -2,7 +2,7 @@
 
 ### Hubert Nowakowski 160302
 
-### Mukhammad Sattorov 159351
+### Muhammad Sattorov 159351
 
 ### Code link: https://github.com/hnowakowski/Evolutionary-Computation-2026/blob/main/3_local/main.cpp
 
