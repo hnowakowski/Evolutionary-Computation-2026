@@ -97,7 +97,7 @@ void runTestCases(algo algo, std::vector<std::vector<int32_t>>& matrix, std::vec
 		threads.emplace_back([&]() {
 			while (true) {
 				int32_t curr = currIdx.fetch_add(1);
-				if (curr % 20 == 0) std::cout << curr << "\n";
+				//if (curr % 20 == 0) std::cout << curr << "\n";
 				if (curr >= 200) break;
 				solutions[curr] = algo(matrix, nodes, curr, subalgo);
 			}

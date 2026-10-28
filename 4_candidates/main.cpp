@@ -32,7 +32,7 @@ int32_t interNodeSwapDelta(std::vector<std::vector<int32_t>>& matrix, std::vecto
 }
 
 std::vector<int32_t> localSteepestEdges(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode, subalgo subalgo) {
-	const size_t NEAREST_CNT = 10;
+	const size_t NEAREST_CNT = 20;
 	std::vector<int32_t> sol = subalgo(matrix, nodes, startingNode);
 	std::array<int32_t, 200> solLookup;
 	solLookup.fill(-1);
@@ -62,18 +62,16 @@ std::vector<int32_t> localSteepestEdges(std::vector<std::vector<int32_t>>& matri
 
 
 	std::vector<std::array<size_t, 2>> nodeSwapPoolInter;
-	for (size_t i = 0; i < matrix.size(); i++) {
-		if (solLookup[i] == -1) continue;
-		size_t iSolIdx = solLookup[i];
-		size_t beforeI = (iSolIdx == 0) ? sol.size() - 1 : iSolIdx - 1;
-		size_t afterI = (iSolIdx == sol.size() - 1) ? 0 : iSolIdx + 1;
-		for (size_t j = 0; j < nearest[sol[beforeI]].size(); j++) {
+	for (size_t i = 0; i < sol.size(); i++) {
+		size_t beforeI = (i == 0) ? sol.size() - 1 : i - 1;
+		size_t afterI = (i == sol.size() - 1) ? 0 : i + 1;
+		for (int32_t j : nearest[sol[beforeI]]) {
 			if (solLookup[j] != -1) continue;
-			nodeSwapPoolInter.emplace_back(std::array<size_t, 2>{i, j});
+			nodeSwapPoolInter.emplace_back(std::array<size_t, 2>{(size_t)sol[i], (size_t)j});
 		}
-		for (size_t j = 0; j < nearest[sol[afterI]].size(); j++) {
+		for (int32_t j : nearest[sol[afterI]]) {
 			if (solLookup[j] != -1) continue;
-			nodeSwapPoolInter.emplace_back(std::array<size_t, 2>{i, j});
+			nodeSwapPoolInter.emplace_back(std::array<size_t, 2>{(size_t)sol[i], (size_t)j});
 		}
 	}
 
@@ -96,6 +94,8 @@ std::vector<int32_t> localSteepestEdges(std::vector<std::vector<int32_t>>& matri
 			}
 		}
 	}
+	//std::cout << "Node swap pool size: " << nodeSwapPoolInter.size() << "\n"; // ~1000 for 10, 10000 for normal, 20000 for 199
+	//std::cout << "Edge swap pool size: " << edgeSwapPool.size() << "\n"; // ~420 for 10, 4850 for normal, 9600 for 199
 
 	// actual search
 	while (true) {
@@ -147,18 +147,16 @@ std::vector<int32_t> localSteepestEdges(std::vector<std::vector<int32_t>>& matri
 			nodeSwapPoolInter.clear();
 			edgeSwapPool.clear();
 
-			for (size_t i = 0; i < matrix.size(); i++) {
-				if (solLookup[i] == -1) continue;
-				size_t iSolIdx = solLookup[i];
-				size_t beforeI = (iSolIdx == 0) ? sol.size() - 1 : iSolIdx - 1;
-				size_t afterI = (iSolIdx == sol.size() - 1) ? 0 : iSolIdx + 1;
-				for (size_t j = 0; j < nearest[sol[beforeI]].size(); j++) {
+			for (size_t i = 0; i < sol.size(); i++) {
+				size_t beforeI = (i == 0) ? sol.size() - 1 : i - 1;
+				size_t afterI = (i == sol.size() - 1) ? 0 : i + 1;
+				for (int32_t j : nearest[sol[beforeI]]) {
 					if (solLookup[j] != -1) continue;
-					nodeSwapPoolInter.emplace_back(std::array<size_t, 2>{i, j});
+					nodeSwapPoolInter.emplace_back(std::array<size_t, 2>{(size_t)sol[i], (size_t)j});
 				}
-				for (size_t j = 0; j < nearest[sol[afterI]].size(); j++) {
+				for (int32_t j : nearest[sol[afterI]]) {
 					if (solLookup[j] != -1) continue;
-					nodeSwapPoolInter.emplace_back(std::array<size_t, 2>{i, j});
+					nodeSwapPoolInter.emplace_back(std::array<size_t, 2>{(size_t)sol[i], (size_t)j});
 				}
 			}
 			for (size_t i = 0; i < sol.size(); i++) {
@@ -188,10 +186,10 @@ std::vector<int32_t> localSteepestEdges(std::vector<std::vector<int32_t>>& matri
 int main() {
 	std::vector<Node> nodes = getNodes(1);
 	std::vector<std::vector<int32_t>> distMatrix = getDistMatrix(nodes);
-	runTestCases(localSteepestEdges, distMatrix, nodes, "localSteepestEdgesRandomA", "localSteepestEdgesRandomA", 8, randomSolution);
+	runTestCases(localSteepestEdges, distMatrix, nodes, "candidates20A", "candidates20A", 1, randomSolution);
 	nodes = getNodes(2);
 	distMatrix = getDistMatrix(nodes);
-	runTestCases(localSteepestEdges, distMatrix, nodes, "localSteepestEdgesRandomB", "localSteepestEdgesRandomB", 8, randomSolution);
+	runTestCases(localSteepestEdges, distMatrix, nodes, "candidates20B", "candidates20B", 1, randomSolution);
 	std::cin.get();
 	return 0;
 }
