@@ -71,12 +71,11 @@ int32_t edgeState(std::vector<int32_t>& sol, std::array<int32_t, 200>& solLookup
 }
 
 void reverseWithCycle(std::vector<int32_t>& sol, std::array<int32_t, 200>& solLookup, int32_t start, int32_t end) {
-	int32_t n = sol.size();
-	int32_t len = (end - start + n) % n + 1;
+	int32_t len = (end - start + sol.size()) % sol.size() + 1;
 
 	for (int32_t i = 0; i < len / 2; i++) {
-		int32_t a = (start + i) % n;
-		int32_t b = (start + len - 1 - i) % n;
+		int32_t a = (start + i) % sol.size();
+		int32_t b = (start + len - 1 - i) % sol.size();
 
 		std::swap(sol[a], sol[b]);
 		solLookup[sol[a]] = a;
@@ -123,7 +122,7 @@ std::vector<int32_t> localSteepestEdges(std::vector<std::vector<int32_t>>& matri
 			Move m = movePool.top();
 			auto [i, j, k, l] = m.swap;
 			if (!m.isEdge) {
-				// nodes missing in sol
+				// nodes missing in sol or j present
 				if (solLookup[i] == -1 || solLookup[j] != -1 || solLookup[k] == -1 || solLookup[l] == -1) {
 					movePool.pop();
 					continue;
@@ -158,10 +157,6 @@ std::vector<int32_t> localSteepestEdges(std::vector<std::vector<int32_t>>& matri
 					continue;
 				}
 				// swag
-				int32_t iIdx = solLookup[i];
-				int32_t jIdx = solLookup[j];
-				int32_t kIdx = solLookup[k];
-				int32_t lIdx = solLookup[l];
 				if (state1 == 1) {
 					reverseWithCycle(sol, solLookup, solLookup[j], solLookup[k]);
 				}
