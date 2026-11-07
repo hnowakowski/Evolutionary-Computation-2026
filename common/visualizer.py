@@ -8,7 +8,7 @@ matplotlib.use("Agg")
 
 BASE_DIR = Path(__file__).resolve().parent
 CSV_FILE = BASE_DIR / "TSPA.csv"
-RESULTS_DIR = BASE_DIR.parent / "3_local" / "results"
+RESULTS_DIR = BASE_DIR.parent / "4_candidates" / "results"
 
 
 def load_nodes(filename):

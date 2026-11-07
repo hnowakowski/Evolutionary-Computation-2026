@@ -292,6 +292,9 @@ std::vector<int32_t> localSteepestEdges(std::vector<std::vector<int32_t>>& matri
 		}
 	}
 
+	//std::cout << "Node swap pool size: " << nodeSwapPoolInter.size() << "\n"; // ~1000 for 10
+	//std::cout << "Edge swap pool size: " << edgeSwapPool.size() << "\n"; // ~420 for 10
+
 	// actual search
 	while (true) {
 		size_t bestIdx = 0;
@@ -448,27 +451,27 @@ int main()
 {
 	std::vector<Node> nodes = getNodes(1);
 	std::vector<std::vector<int32_t>> distMatrix = getDistMatrix(nodes);
-	runTestCases(localGreedyEdges, distMatrix, nodes, "localGreedyEdgesRandomA", "localGreedyEdgesRandomA", 8, randomSolution);
-	runTestCases(localGreedyNodes, distMatrix, nodes, "localGreedyNodesRandomA", "localGreedyNodesRandomA", 8, randomSolution);
-	runTestCases(localSteepestEdges, distMatrix, nodes, "localSteepestEdgesRandomA", "localSteepestEdgesRandomA", 8, randomSolution);
-	runTestCases(localSteepestNodes, distMatrix, nodes, "localSteepestNodesRandomA", "localSteepestNodesRandomA", 8, randomSolution);
+	//runTestCases(localGreedyEdges, distMatrix, nodes, "localGreedyEdgesRandomA", "localGreedyEdgesRandomA", 8, randomSolution);
+	//runTestCases(localGreedyNodes, distMatrix, nodes, "localGreedyNodesRandomA", "localGreedyNodesRandomA", 8, randomSolution);
+	runTestCases(localSteepestEdges, distMatrix, nodes, "localSteepestEdgesRandomA", "localSteepestEdgesRandomA", 1, randomSolution);
+	//runTestCases(localSteepestNodes, distMatrix, nodes, "localSteepestNodesRandomA", "localSteepestNodesRandomA", 8, randomSolution);
 
-	runTestCases(localGreedyEdges, distMatrix, nodes, "localGreedyEdgesHeuristicA", "localGreedyEdgesHeuristicA", 8, greedyCycle2weighted);
-	runTestCases(localGreedyNodes, distMatrix, nodes, "localGreedyNodesHeuristicA", "localGreedyNodesHeuristicA", 8, greedyCycle2weighted);
-	runTestCases(localSteepestEdges, distMatrix, nodes, "localSteepestEdgesHeuristicA", "localSteepestEdgesHeuristicA", 8, greedyCycle2weighted);
-	runTestCases(localSteepestNodes, distMatrix, nodes, "localSteepestNodesHeuristicA", "localSteepestNodesHeuristicA", 8, greedyCycle2weighted);
+	//runTestCases(localGreedyEdges, distMatrix, nodes, "localGreedyEdgesHeuristicA", "localGreedyEdgesHeuristicA", 8, greedyCycle2weighted);
+	//runTestCases(localGreedyNodes, distMatrix, nodes, "localGreedyNodesHeuristicA", "localGreedyNodesHeuristicA", 8, greedyCycle2weighted);
+	//runTestCases(localSteepestEdges, distMatrix, nodes, "localSteepestEdgesHeuristicA", "localSteepestEdgesHeuristicA", 8, greedyCycle2weighted);
+	//runTestCases(localSteepestNodes, distMatrix, nodes, "localSteepestNodesHeuristicA", "localSteepestNodesHeuristicA", 8, greedyCycle2weighted);
 
 	nodes = getNodes(2);
 	distMatrix = getDistMatrix(nodes);
-	runTestCases(localGreedyEdges, distMatrix, nodes, "localGreedyEdgesRandomB", "localGreedyEdgesRandomB", 8, randomSolution);
-	runTestCases(localGreedyNodes, distMatrix, nodes, "localGreedyNodesRandomB", "localGreedyNodesRandomB", 8, randomSolution);
-	runTestCases(localSteepestEdges, distMatrix, nodes, "localSteepestEdgesRandomB", "localSteepestEdgesRandomB", 8, randomSolution);
-	runTestCases(localSteepestNodes, distMatrix, nodes, "localSteepestNodesRandomB", "localSteepestNodesRandomB", 8, randomSolution);
+	//runTestCases(localGreedyEdges, distMatrix, nodes, "localGreedyEdgesRandomB", "localGreedyEdgesRandomB", 8, randomSolution);
+	//runTestCases(localGreedyNodes, distMatrix, nodes, "localGreedyNodesRandomB", "localGreedyNodesRandomB", 8, randomSolution);
+	runTestCases(localSteepestEdges, distMatrix, nodes, "localSteepestEdgesRandomB", "localSteepestEdgesRandomB", 1, randomSolution);
+	//runTestCases(localSteepestNodes, distMatrix, nodes, "localSteepestNodesRandomB", "localSteepestNodesRandomB", 8, randomSolution);
 
-	runTestCases(localGreedyEdges, distMatrix, nodes, "localGreedyEdgesHeuristicB", "localGreedyEdgesHeuristicB", 8, nearestNeighbour2weighted);
-	runTestCases(localGreedyNodes, distMatrix, nodes, "localGreedyNodesHeuristicB", "localGreedyNodesHeuristicB", 8, nearestNeighbour2weighted);
-	runTestCases(localSteepestEdges, distMatrix, nodes, "localSteepestEdgesHeuristicB", "localSteepestEdgesHeuristicB", 8, nearestNeighbour2weighted);
-	runTestCases(localSteepestNodes, distMatrix, nodes, "localSteepestNodesHeuristicB", "localSteepestNodesHeuristicB", 8, nearestNeighbour2weighted);
+	//runTestCases(localGreedyEdges, distMatrix, nodes, "localGreedyEdgesHeuristicB", "localGreedyEdgesHeuristicB", 8, nearestNeighbour2weighted);
+	//runTestCases(localGreedyNodes, distMatrix, nodes, "localGreedyNodesHeuristicB", "localGreedyNodesHeuristicB", 8, nearestNeighbour2weighted);
+	//runTestCases(localSteepestEdges, distMatrix, nodes, "localSteepestEdgesHeuristicB", "localSteepestEdgesHeuristicB", 8, nearestNeighbour2weighted);
+	//runTestCases(localSteepestNodes, distMatrix, nodes, "localSteepestNodesHeuristicB", "localSteepestNodesHeuristicB", 8, nearestNeighbour2weighted);
 
 	std::cin.get();
 	return 0;

@@ -16,6 +16,8 @@
 #include <set>
 #include <array>
 #include <random>
+#include <queue>
+#include <stdexcept>
 
 struct Node {
 	int32_t x;
