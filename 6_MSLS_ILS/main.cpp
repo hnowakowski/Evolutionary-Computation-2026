@@ -108,6 +108,8 @@ std::vector<int32_t> localSearch(std::vector<std::vector<int32_t>>& matrix, std:
 			if (i == 0 && l == 0) continue;
 			Move m(matrix, sol, sol[i], sol[j], sol[k], sol[l]);
 			if (m.delta < 0) movePool.emplace(m);
+			m = Move(matrix, sol, sol[j], sol[i], sol[k], sol[l]);
+			if (m.delta < 0) movePool.emplace(m);
 		}
 	}
 	
@@ -176,11 +178,11 @@ std::vector<int32_t> localSearch(std::vector<std::vector<int32_t>>& matrix, std:
 		}
 
 		// FULL RESET only if no usable moves found
+		int32_t invalidCnt = 0;
 		if (!foundUsable) {
 			// unsure about this, could be an inefficiency but clearing this means i can use the pool being empty as a final condition for finishing if everything fails
 			// idk how else to check finality with this approach where priority queue accepts duplicates by default
 			reservePool.clear();
-
 			// node swaps
 			for (size_t i = 0; i < sol.size(); i++) {
 				for (size_t j = 0; j < matrix.size(); j++) {
@@ -198,20 +200,25 @@ std::vector<int32_t> localSearch(std::vector<std::vector<int32_t>>& matrix, std:
 					if (i == 0 && l == 0) continue;
 					Move m(matrix, sol, sol[i], sol[j], sol[k], sol[l]);
 					if (m.delta < 0) movePool.emplace(m);
+					m = Move(matrix, sol, sol[j], sol[i], sol[k], sol[l]);
+					if (m.delta < 0) {
+						movePool.emplace(m);
+						invalidCnt++;
+					}
 				}
 			}
 		}
 		// no more improving moves can be found
-		if (movePool.empty()) break;
+		if (movePool.size() == invalidCnt && !foundUsable) break;
 	}
 	return sol;
 }
 
-std::vector<int32_t> randomSolution(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t seed) {
+std::vector<int32_t> randomSolutionSeed(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t seed) {
 	int32_t resSize = (int32_t)std::ceil(matrix.size() / 2.0);
 	std::vector<int32_t> res(resSize);
 	std::vector<int32_t> remainingPool;
-	for (int32_t i = 0; i < resSize; i++) {
+	for (int32_t i = 0; i < matrix.size(); i++) {
 		remainingPool.emplace_back(i);
 	}
 	std::mt19937 rng(seed);
@@ -225,16 +232,16 @@ std::vector<int32_t> randomSolution(std::vector<std::vector<int32_t>>& matrix, s
 	return res;
 }
 
-// perturbation idea: 2-4 random moves
 
 std::vector<int32_t> MSLS(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode, subalgo subalgo) {
 	const size_t ITER_CNT = 400;
 	std::vector<int32_t> bestSol;
 	int32_t bestScore = INT32_MAX;
 	for (size_t i = 0; i < ITER_CNT; i++) {
-		std::vector<int32_t> temp = randomSolution(matrix, nodes, i);
+		std::vector<int32_t> temp = randomSolutionSeed(matrix, nodes, startingNode*400 + i);
 		temp = localSearch(matrix, nodes, temp);
 		int32_t score = totalCost(temp, nodes) + totalDist(temp, matrix);
+		//std::cout << score << "\n";
 		if (score < bestScore) {
 			bestScore = score;
 			bestSol = temp;
@@ -243,19 +250,31 @@ std::vector<int32_t> MSLS(std::vector<std::vector<int32_t>>& matrix, std::vector
 	return bestSol;
 }
 
-std::vector<int32_t> ILS(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode, subalgo subalgo) {
+// perturbation idea: 2-4 random moves
+//std::vector<int32_t> ILS(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode, subalgo subalgo) {
+//
+//}
 
-}
-
-
+// 67.3089 seconds
+// 66.6899 seconds
 int main() {
 	std::vector<Node> nodes = getNodes(1);
 	std::vector<std::vector<int32_t>> distMatrix = getDistMatrix(nodes);
 	runTestCases(MSLS, distMatrix, nodes, "MSLSA", "MSLSA", 1);
+	//178 1 3 50 47 130 159 146 170 153 193 78 88 107 64 57 182 111 192 158 134 84 58 181 114 25 98 87 141 30 161 187 189 2 171 92 69 127 97 95 168 119 63 149 116 60 49 160 123 100 152 108 48 80 91 157 71 4 76 132 51 16 35 156 180 28 102 185 45 135 73 140 53 179 144 67 52 177 36 131 33 9 54 8 174 176 150 151 42 89 113 106 43 93 85 164 186 136 29 101
+	//Max objective : 74050
+	//Average objective : 73630
+	//Min objective : 73285
+	//Elapsed : 65.7921 seconds
 	//runTestCases(ILS, distMatrix, nodes, "ILSA", "ILSA", 1);
 	nodes = getNodes(2);
 	distMatrix = getDistMatrix(nodes);
 	runTestCases(MSLS, distMatrix, nodes, "MSLSB", "MSLSB", 1);
+	//114 148 143 10 78 54 162 192 80 127 129 90 153 14 2 20 74 171 99 67 24 34 179 87 82 85 51 167 73 59 151 3 184 86 46 72 117 8 120 133 136 172 160 69 183 30 21 38 47 140 154 26 125 177 170 115 97 155 71 40 60 157 45 134 175 62 36 197 6 29 132 103 178 19 65 145 28 149 146 37 116 147 42 121 198 96 48 156 89 57 104 190 70 187 81 94 105 61 139 196
+	//Max objective : 50427
+	//Average objective : 50207
+	//Min objective : 49655
+	//Elapsed : 66.4933 seconds
 	//runTestCases(ILS, distMatrix, nodes, "ILSB", "ILSB", 1);
 	std::cin.get();
 	return 0;

@@ -87,7 +87,7 @@ void saveSolution(std::vector<int32_t> solution, std::string filename) {
 }
 
 void runTestCases(algo algo, std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, std::string algoName, std::string filename, size_t threadCount, subalgo subalgo) {
-	const size_t RUN_CNT = 200;
+	const size_t RUN_CNT = 20;
 	std::vector<std::vector<int32_t>> solutions(RUN_CNT);
 	std::cout << algoName <<"\n";
 	std::atomic<int32_t> currIdx(0);
@@ -98,7 +98,7 @@ void runTestCases(algo algo, std::vector<std::vector<int32_t>>& matrix, std::vec
 		threads.emplace_back([&]() {
 			while (true) {
 				int32_t curr = currIdx.fetch_add(1);
-				if (curr % 20 == 0) std::cout << curr << "\n";
+				if (curr % 1 == 0) std::cout << curr << "\n";
 				if (curr >= RUN_CNT) break;
 				solutions[curr] = algo(matrix, nodes, curr, subalgo);
 			}
