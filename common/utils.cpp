@@ -87,7 +87,8 @@ void saveSolution(std::vector<int32_t> solution, std::string filename) {
 }
 
 void runTestCases(algo algo, std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, std::string algoName, std::string filename, size_t threadCount, subalgo subalgo) {
-	std::vector<std::vector<int32_t>> solutions(200);
+	const size_t RUN_CNT = 200;
+	std::vector<std::vector<int32_t>> solutions(RUN_CNT);
 	std::cout << algoName <<"\n";
 	std::atomic<int32_t> currIdx(0);
 	std::vector<std::thread> threads;
@@ -97,8 +98,8 @@ void runTestCases(algo algo, std::vector<std::vector<int32_t>>& matrix, std::vec
 		threads.emplace_back([&]() {
 			while (true) {
 				int32_t curr = currIdx.fetch_add(1);
-				if (curr % 10 == 0) std::cout << curr << "\n";
-				if (curr >= 200) break;
+				if (curr % 20 == 0) std::cout << curr << "\n";
+				if (curr >= RUN_CNT) break;
 				solutions[curr] = algo(matrix, nodes, curr, subalgo);
 			}
 			});
@@ -111,9 +112,9 @@ void runTestCases(algo algo, std::vector<std::vector<int32_t>>& matrix, std::vec
 	std::chrono::duration<double> elapsed = end - start;
 	size_t bestSolIdx = 0;
 	int32_t bestObj = INT32_MAX;
-	std::vector<int32_t> scores(200);
+	std::vector<int32_t> scores(RUN_CNT);
 
-	for (size_t i = 0; i < 200; i++) {
+	for (size_t i = 0; i < RUN_CNT; i++) {
 		scores[i] = totalCost(solutions[i], nodes) + totalDist(solutions[i], matrix);
 		if (bestObj > scores[i]) {
 			bestSolIdx = i;

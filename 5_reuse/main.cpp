@@ -109,6 +109,8 @@ std::vector<int32_t> localSteepestEdges(std::vector<std::vector<int32_t>>& matri
 			if (i == 0 && l == 0) continue;
 			Move m(matrix, sol, sol[i], sol[j], sol[k], sol[l]);
 			if (m.delta < 0) movePool.emplace(m);
+			m = Move(matrix, sol, sol[j], sol[i], sol[k], sol[l]);
+			if (m.delta < 0) movePool.emplace(m);
 		}
 	}
 	
@@ -177,11 +179,11 @@ std::vector<int32_t> localSteepestEdges(std::vector<std::vector<int32_t>>& matri
 		}
 
 		// FULL RESET only if no usable moves found
+		int32_t invalidCnt = 0;
 		if (!foundUsable) {
 			// unsure about this, could be an inefficiency but clearing this means i can use the pool being empty as a final condition for finishing if everything fails
 			// idk how else to check finality with this approach where priority queue accepts duplicates by default
 			reservePool.clear();
-
 			// node swaps
 			for (size_t i = 0; i < sol.size(); i++) {
 				for (size_t j = 0; j < matrix.size(); j++) {
@@ -199,11 +201,16 @@ std::vector<int32_t> localSteepestEdges(std::vector<std::vector<int32_t>>& matri
 					if (i == 0 && l == 0) continue;
 					Move m(matrix, sol, sol[i], sol[j], sol[k], sol[l]);
 					if (m.delta < 0) movePool.emplace(m);
+					m = Move(matrix, sol, sol[j], sol[i], sol[k], sol[l]);
+					if (m.delta < 0) {
+						movePool.emplace(m);
+						invalidCnt++;
+					}
 				}
 			}
 		}
 		// no more improving moves can be found
-		if (movePool.empty()) break;
+		if (movePool.size() == invalidCnt && !foundUsable) break;
 	}
 	return sol;
 }
