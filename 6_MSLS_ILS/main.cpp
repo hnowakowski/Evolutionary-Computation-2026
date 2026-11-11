@@ -82,13 +82,8 @@ void reverseWithCycle(std::vector<int32_t>& sol, std::array<int32_t, 200>& solLo
 	}
 }
 
-std::vector<int32_t> localSearch(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, std::vector<int32_t>& startingSol) {
+std::vector<int32_t> localSearch(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, std::vector<int32_t>& startingSol, std::array<int32_t, 200>& solLookup) {
 	std::vector<int32_t> sol = startingSol;
-	std::array<int32_t, 200> solLookup;
-	solLookup.fill(-1);
-	for (size_t i = 0; i < sol.size(); i++) {
-		solLookup[sol[i]] = i;
-	}
 
 	std::priority_queue<Move> movePool;
 	// node swaps
@@ -237,45 +232,106 @@ std::vector<int32_t> MSLS(std::vector<std::vector<int32_t>>& matrix, std::vector
 	const size_t ITER_CNT = 400;
 	std::vector<int32_t> bestSol;
 	int32_t bestScore = INT32_MAX;
+	std::array<int32_t, 200> solLookup;
 	for (size_t i = 0; i < ITER_CNT; i++) {
-		std::vector<int32_t> temp = randomSolutionSeed(matrix, nodes, startingNode*400 + i);
-		temp = localSearch(matrix, nodes, temp);
-		int32_t score = totalCost(temp, nodes) + totalDist(temp, matrix);
+		std::vector<int32_t> sol = randomSolutionSeed(matrix, nodes, startingNode*400 + i);
+		solLookup.fill(-1);
+		for (size_t i = 0; i < sol.size(); i++) {
+			solLookup[sol[i]] = i;
+		}
+		sol = localSearch(matrix, nodes, sol, solLookup);
+		int32_t score = totalCost(sol, nodes) + totalDist(sol, matrix);
 		//std::cout << score << "\n";
 		if (score < bestScore) {
 			bestScore = score;
-			bestSol = temp;
+			bestSol = sol;
 		}
 	}
 	return bestSol;
 }
 
-// perturbation idea: 2-4 random moves
-//std::vector<int32_t> ILS(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode, subalgo subalgo) {
-//
-//}
+// perturbation idea: 4 random moves
+// DOES NOT take sol by reference
+std::vector<int32_t> perturb(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, std::array<int32_t, 200>& solLookup, std::vector<int32_t> sol, int32_t seed) {
+	const size_t MOVE_CNT = 4;
+	std::mt19937 rng(seed);
+	std::uniform_int_distribution<int32_t> typeDist(0, 1);
+	std::uniform_int_distribution<int32_t> solDist(0, sol.size()-1);
+	std::uniform_int_distribution<int32_t> matrixDist(0, matrix.size()-1);
+	for (size_t i = 0; i < MOVE_CNT; i++) {
+		int32_t type = typeDist(rng);
+		// 0 = node
+		if (type == 0) {
+			int32_t i = solDist(rng); // sol idx
+			int32_t j = matrixDist(rng); // matrix idx
+			while (solLookup[j] != -1 || j == sol[i]) {
+				j = matrixDist(rng);
+			}
+			solLookup[sol[i]] = -1;
+			sol[i] = j;
+			solLookup[j] = i; //warning? the expression param(1) is not true for this call
+		}
+		// 1 = edge
+		else {
+			std::uniform_int_distribution<int32_t> posDist(0, sol.size() - 6);
+			int32_t i = posDist(rng);
+			int32_t j = i + 1;
+			std::uniform_int_distribution<int32_t> kDist(i + 2, sol.size() - 2);
+			int32_t k = kDist(rng);
+			reverseWithCycle(sol, solLookup, j, k);
+		}
+	}
+	return sol;
+}
+
+std::vector<int32_t> ILS(std::vector<std::vector<int32_t>>& matrix, std::vector<Node>& nodes, int32_t startingNode, subalgo subalgo) {
+	const std::chrono::milliseconds TIME_LIMIT((long)((65.7921 + 66.4933)*1000./2./20.)); // should be a bit under 2s
+	std::chrono::time_point start = std::chrono::steady_clock::now();
+	std::vector<int32_t> sol = randomSolutionSeed(matrix, nodes, startingNode);
+	int32_t bestScore = totalCost(sol, nodes) + totalDist(sol, matrix);
+	std::array<int32_t, 200> solLookup;
+	solLookup.fill(-1);
+	for (size_t i = 0; i < sol.size(); i++) {
+		solLookup[sol[i]] = i;
+	}
+	int32_t runCnt = 0;
+	while ((std::chrono::steady_clock::now() - start) < TIME_LIMIT) {
+		std::array<int32_t, 200> tempSolLookup = solLookup;
+		std::vector<int32_t> tempSol = perturb(matrix, nodes, tempSolLookup, sol, runCnt);
+		tempSol = localSearch(matrix, nodes, tempSol, tempSolLookup);
+		int32_t score = totalCost(tempSol, nodes) + totalDist(tempSol, matrix);
+		if (score < bestScore) {
+			sol = tempSol;
+			solLookup = tempSolLookup;
+			bestScore = score;
+		}
+		runCnt++;
+	}
+	std::cout<< "Run count: " << runCnt << "\n";
+	return sol;
+}
 
 // 67.3089 seconds
 // 66.6899 seconds
 int main() {
 	std::vector<Node> nodes = getNodes(1);
 	std::vector<std::vector<int32_t>> distMatrix = getDistMatrix(nodes);
-	runTestCases(MSLS, distMatrix, nodes, "MSLSA", "MSLSA", 1);
+	//runTestCases(MSLS, distMatrix, nodes, "MSLSA", "MSLSA", 1);
 	//178 1 3 50 47 130 159 146 170 153 193 78 88 107 64 57 182 111 192 158 134 84 58 181 114 25 98 87 141 30 161 187 189 2 171 92 69 127 97 95 168 119 63 149 116 60 49 160 123 100 152 108 48 80 91 157 71 4 76 132 51 16 35 156 180 28 102 185 45 135 73 140 53 179 144 67 52 177 36 131 33 9 54 8 174 176 150 151 42 89 113 106 43 93 85 164 186 136 29 101
 	//Max objective : 74050
 	//Average objective : 73630
 	//Min objective : 73285
 	//Elapsed : 65.7921 seconds
-	//runTestCases(ILS, distMatrix, nodes, "ILSA", "ILSA", 1);
+	runTestCases(ILS, distMatrix, nodes, "ILSA", "ILSA", 1);
 	nodes = getNodes(2);
 	distMatrix = getDistMatrix(nodes);
-	runTestCases(MSLS, distMatrix, nodes, "MSLSB", "MSLSB", 1);
+	//runTestCases(MSLS, distMatrix, nodes, "MSLSB", "MSLSB", 1);
 	//114 148 143 10 78 54 162 192 80 127 129 90 153 14 2 20 74 171 99 67 24 34 179 87 82 85 51 167 73 59 151 3 184 86 46 72 117 8 120 133 136 172 160 69 183 30 21 38 47 140 154 26 125 177 170 115 97 155 71 40 60 157 45 134 175 62 36 197 6 29 132 103 178 19 65 145 28 149 146 37 116 147 42 121 198 96 48 156 89 57 104 190 70 187 81 94 105 61 139 196
 	//Max objective : 50427
 	//Average objective : 50207
 	//Min objective : 49655
 	//Elapsed : 66.4933 seconds
-	//runTestCases(ILS, distMatrix, nodes, "ILSB", "ILSB", 1);
+	runTestCases(ILS, distMatrix, nodes, "ILSB", "ILSB", 1);
 	std::cin.get();
 	return 0;
 }
